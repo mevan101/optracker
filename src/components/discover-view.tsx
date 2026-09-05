@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
-import { fetchJobs, type JobsResponse } from "@/lib/client/api";
+import { useMemo, useState } from "react";
+import { filterListings } from "@/lib/client/filter-listings";
+import type { JobsResponse } from "@/lib/client/api";
+import { IconSearch } from "@/components/icons";
 import { JobCard, Pill } from "@/components/job-card";
-import { EmptyState, ErrorState, SkeletonList } from "@/components/states";
+import { EmptyState } from "@/components/states";
 
 const FILTERS = [
   { id: "all", label: "All" },
@@ -16,59 +17,21 @@ const FILTERS = [
 
 export function DiscoverView({ initial }: { initial: JobsResponse }) {
   const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
   const [workMode, setWorkMode] = useState("all");
-  const [data, setData] = useState<JobsResponse>(initial);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebounced(query.trim()), 180);
-    return () => window.clearTimeout(timer);
-  }, [query]);
+  const listings = useMemo(
+    () => filterListings(initial.listings, query, workMode),
+    [initial.listings, query, workMode],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    const isDefault = !debounced && workMode === "all";
-    if (!isDefault) {
-      setLoading(true);
-    }
-    setError(null);
-    fetchJobs({
-      q: debounced || undefined,
-      workMode: workMode === "all" ? undefined : workMode,
-    })
-      .then((payload) => {
-        if (!cancelled) {
-          setData(payload);
-        }
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Catalog unavailable.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [debounced, workMode]);
-
-  const remaining = data.budget.remaining;
-  const emptyCopy = useMemo(() => {
-    if (debounced || workMode !== "all") {
-      return "Nothing in the live catalog matches that filter.";
-    }
-    return "The board is empty until a pulse fetches real listings. Nothing is fabricated.";
-  }, [debounced, workMode]);
+  const filtered = Boolean(query.trim() || workMode !== "all");
+  const emptyCopy = filtered
+    ? "Nothing in the live catalog matches that filter."
+    : "The board is empty until a pulse fetches real listings. Nothing is fabricated.";
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-6 min-h-[92px]">
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-mist lg:hidden">
           OpTracker
         </p>
@@ -80,8 +43,10 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
         </p>
       </header>
 
-      <label className="glass mb-4 flex items-center gap-3 rounded-full px-4 py-3">
-        <Search size={16} className="text-ash" strokeWidth={1.5} />
+      <label className="panel mb-4 flex min-h-12 items-center gap-3 rounded-full px-4">
+        <span className="text-ash">
+          <IconSearch />
+        </span>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -90,16 +55,16 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
         />
       </label>
 
-      <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto">
+      <div className="no-scrollbar mb-5 flex min-h-9 gap-2 overflow-x-auto">
         {FILTERS.map((filter) => (
           <button
             key={filter.id}
             type="button"
             onClick={() => setWorkMode(filter.id)}
-            className={`rounded-full px-3.5 py-1.5 text-[13px] ${
+            className={`pressable rounded-full px-3.5 py-1.5 text-[13px] ${
               workMode === filter.id
                 ? "bg-ivory text-obsidian"
-                : "glass text-mist"
+                : "panel text-mist"
             }`}
           >
             {filter.label}
@@ -107,41 +72,36 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
         ))}
       </div>
 
-      <div className="mb-4 flex items-center justify-between text-[12px] text-ash">
+      <div className="mb-4 flex min-h-4 items-center justify-between text-[12px] text-ash">
         <span>
-          {data.total} live
-          {data.hidden ? ` · ${data.hidden} hidden` : ""}
+          {listings.length} live
+          {initial.hidden ? ` · ${initial.hidden} hidden` : ""}
         </span>
-        <span>{remaining} pulses left today</span>
+        <span>{initial.budget.remaining} pulses left today</span>
       </div>
 
-      {loading ? <SkeletonList /> : null}
-      {!loading && error ? (
-        <ErrorState body={error} onRetry={() => setDebounced((value) => value)} />
-      ) : null}
-      {!loading && !error && data.listings.length === 0 ? (
+      {listings.length === 0 ? (
         <EmptyState
           title="Quiet board"
           body={emptyCopy}
           action={
             <Link
               href="/pulse"
-              className="glass-strong inline-flex rounded-full px-5 py-2 text-[13px] text-ivory"
+              className="pressable glass-strong inline-flex rounded-full px-5 py-2 text-[13px] text-ivory"
             >
               Open Pulse
             </Link>
           }
         />
-      ) : null}
-      {!loading && !error && data.listings.length > 0 ? (
-        <div className="space-y-3">
-          {data.listings.map((listing) => (
+      ) : (
+        <div className="card-list space-y-3">
+          {listings.map((listing) => (
             <JobCard key={listing.id} listing={listing} />
           ))}
         </div>
-      ) : null}
+      )}
 
-      <div className="mt-6 flex flex-wrap gap-1.5">
+      <div className="mt-6 flex min-h-6 flex-wrap gap-1.5">
         <Pill>No mock data</Pill>
         <Pill>No placeholders</Pill>
         <Pill>Expired listings removed</Pill>

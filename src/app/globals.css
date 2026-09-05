@@ -8,6 +8,12 @@
   --font-sans:
     "SF Pro Display", "SF Pro Text", Inter, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
+  --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  background: #09090b;
+  color-scheme: dark;
 }
 
 html,
@@ -19,6 +25,7 @@ body {
   letter-spacing: -0.02em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -39,8 +46,15 @@ body {
 
 input,
 button,
-textarea {
+textarea,
+a {
   letter-spacing: -0.02em;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
 }
 
 a {
@@ -51,18 +65,33 @@ a {
   box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
 }
 
-.glass {
+.panel {
   background: rgba(255, 255, 255, 0.034);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.045);
   box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
 }
 
 .glass-strong {
-  background: rgba(255, 255, 255, 0.055);
-  backdrop-filter: blur(32px) saturate(170%);
-  -webkit-backdrop-filter: blur(32px) saturate(170%);
+  background: rgba(255, 255, 255, 0.07);
   box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+@supports (backdrop-filter: blur(20px)) {
+  .glass {
+    background: rgba(255, 255, 255, 0.034);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.055);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+  }
 }
 
 .app-safe {
@@ -79,23 +108,93 @@ a {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0.07),
-    rgba(255, 255, 255, 0.03)
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+.page-enter {
+  animation: rise 420ms var(--ease-luxury) both;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 100% 0;
+.lift {
+  transition:
+    transform 180ms var(--ease-luxury),
+    opacity 180ms var(--ease-luxury),
+    background-color 180ms var(--ease-luxury);
+  will-change: transform;
+}
+
+.lift:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+.lift:active {
+  transform: scale3d(0.985, 0.985, 1);
+}
+
+.pressable {
+  transition:
+    transform 160ms var(--ease-luxury),
+    opacity 160ms var(--ease-luxury);
+}
+
+.pressable:active {
+  transform: scale3d(0.97, 0.97, 1);
+}
+
+.card-list > * {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 148px;
+}
+
+.nav-item {
+  transition:
+    color 180ms var(--ease-luxury),
+    opacity 180ms var(--ease-luxury),
+    transform 180ms var(--ease-luxury);
+}
+
+.nav-item[data-active="true"] {
+  transform: translate3d(0, -1px, 0);
+}
+
+.meter {
+  transform-origin: left center;
+  transition: transform 400ms var(--ease-luxury);
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  animation: sweep 1.4s var(--ease-luxury) infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
   }
-  100% {
-    background-position: -100% 0;
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    transform: translate3d(100%, 0, 0);
   }
 }
 
@@ -106,4 +205,23 @@ a {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .skeleton::after,
+  .lift,
+  .pressable,
+  .nav-item,
+  .meter {
+    animation: none;
+    transition: none;
+  }
+
+  .lift:hover,
+  .lift:active,
+  .pressable:active,
+  .nav-item[data-active="true"] {
+    transform: none;
+  }
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowUpRight, Bookmark } from "lucide-react";
+import { IconArrowLeft, IconArrowUpRight, IconBookmark } from "@/components/icons";
 import { companyInitials, formatRelative } from "@/lib/domain/text";
 import { readSavedIds, toggleSaved } from "@/lib/client/saved";
 import { Pill } from "@/components/job-card";
@@ -17,22 +17,22 @@ export function JobDetail({ listing }: { listing: JobListing }) {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-[13px] text-mist">
-          <ArrowLeft size={16} />
+      <div className="mb-6 flex min-h-8 items-center justify-between">
+        <Link href="/" className="pressable flex items-center gap-2 text-[13px] text-mist">
+          <IconArrowLeft />
           Discover
         </Link>
         <button
           type="button"
           onClick={() => setSaved(toggleSaved(listing.id).includes(listing.id))}
-          className="glass flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] text-ivory"
+          className="pressable panel flex min-w-[5.5rem] items-center justify-center gap-2 rounded-full px-3 py-1.5 text-[12px] text-ivory"
         >
-          <Bookmark size={14} fill={saved ? "currentColor" : "none"} />
+          <IconBookmark size={14} filled={saved} />
           {saved ? "Saved" : "Save"}
         </button>
       </div>
 
-      <section className="glass rounded-[28px] p-6">
+      <section className="panel rounded-[28px] p-6">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04] text-[13px] whisper">
           {companyInitials(listing.company)}
         </div>
@@ -56,12 +56,12 @@ export function JobDetail({ listing }: { listing: JobListing }) {
           href={listing.url}
           target="_blank"
           rel="noreferrer"
-          className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-full bg-ivory text-[15px] font-medium text-obsidian"
+          className="pressable mt-8 flex min-h-12 items-center justify-center gap-2 rounded-full bg-ivory text-[15px] font-semibold text-[#09090b]"
         >
           Open on {listing.platformName}
-          <ArrowUpRight size={16} />
+          <IconArrowUpRight />
         </a>
-        <p className="mt-4 text-center text-[11px] leading-5 text-ash">
+        <p className="mt-4 min-h-10 text-center text-[11px] leading-5 text-ash">
           Application happens on the original board. OpTracker does not invent
           descriptions or apply on your behalf.
         </p>

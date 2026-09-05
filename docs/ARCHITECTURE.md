@@ -58,3 +58,11 @@ Each card links back to the original platform URL. OpTracker does not scrape HTM
 ## UI
 
 Apple ultra-premium luxury minimalism: obsidian `#09090b`, Inter + SF Pro stack, `-0.02em` tracking, 0.5px whisper borders, restrained glass. Mobile chrome is tuned for iPhone 16 Pro (402 CSS px) with `viewport-fit=cover` and `safe-area-inset-top` / `safe-area-inset-bottom`. Loading, error, empty, and filtered-detail states are first-class.
+
+## Performance
+
+- Search and work-mode filters run against the already-rendered catalog — no refetch on keystroke.
+- Boards is a server component. Pulse and Saved only hydrate the controls they need.
+- Job cards use paint-cheap `.panel` surfaces (no backdrop-filter). Blur is reserved for the tab bar.
+- Motion is transform/opacity only (`translate3d` / `scale3d` / `scaleX`), with `prefers-reduced-motion` respected.
+- Reserved min-heights on headers, empty states, and cards reduce layout shift at 402px.

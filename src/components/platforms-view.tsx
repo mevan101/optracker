@@ -1,33 +1,11 @@
-"use client";
+import { IconArrowUpRight } from "@/components/icons";
+import { EmptyState } from "@/components/states";
+import type { PlatformRow } from "@/lib/client/api";
 
-import { useEffect, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { fetchPlatforms, type PlatformRow, type PlatformsResponse } from "@/lib/client/api";
-import { EmptyState, ErrorState, SkeletonList } from "@/components/states";
-
-export function PlatformsView({ initial }: { initial: PlatformsResponse }) {
-  const [platforms, setPlatforms] = useState<PlatformRow[]>(initial.platforms);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  function load() {
-    setLoading(true);
-    setError(null);
-    fetchPlatforms()
-      .then((payload) => setPlatforms(payload.platforms))
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : "Platforms unavailable."),
-      )
-      .finally(() => setLoading(false));
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
+export function PlatformsView({ platforms }: { platforms: PlatformRow[] }) {
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-6 min-h-[92px]">
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-mist lg:hidden">
           Platforms
         </p>
@@ -40,20 +18,17 @@ export function PlatformsView({ initial }: { initial: PlatformsResponse }) {
         </p>
       </header>
 
-      {loading ? <SkeletonList count={5} /> : null}
-      {!loading && error ? <ErrorState body={error} onRetry={load} /> : null}
-      {!loading && !error && platforms.length === 0 ? (
+      {platforms.length === 0 ? (
         <EmptyState title="No platforms" body="The curated catalog is empty." />
-      ) : null}
-      {!loading && !error ? (
-        <div className="grid gap-3 lg:grid-cols-2">
+      ) : (
+        <div className="card-list grid gap-3 lg:grid-cols-2">
           {platforms.map((platform) => (
             <a
               key={platform.id}
               href={platform.homeUrl}
               target="_blank"
               rel="noreferrer"
-              className="glass rounded-[24px] p-5 transition hover:bg-white/[0.05]"
+              className="panel lift rounded-[24px] p-5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -64,9 +39,11 @@ export function PlatformsView({ initial }: { initial: PlatformsResponse }) {
                     {platform.name}
                   </h2>
                 </div>
-                <ArrowUpRight size={16} className="text-ash" />
+                <span className="text-ash">
+                  <IconArrowUpRight />
+                </span>
               </div>
-              <p className="mt-3 text-[13px] leading-5 text-mist">
+              <p className="mt-3 min-h-10 text-[13px] leading-5 text-mist">
                 {platform.description}
               </p>
               <div className="mt-4 text-[12px] text-ash">
@@ -75,7 +52,7 @@ export function PlatformsView({ initial }: { initial: PlatformsResponse }) {
             </a>
           ))}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

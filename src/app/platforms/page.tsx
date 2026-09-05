@@ -14,13 +14,10 @@ export default function PlatformsPage() {
 
   return (
     <PlatformsView
-      initial={{
-        platforms: JOB_PLATFORMS.map((platform) => ({
-          ...platform,
-          liveCount: counts.get(platform.id) ?? 0,
-        })),
-        budget: presented.budget,
-      }}
+      platforms={JOB_PLATFORMS.map((platform) => ({
+        ...platform,
+        liveCount: counts.get(platform.id) ?? 0,
+      }))}
     />
   );
 }

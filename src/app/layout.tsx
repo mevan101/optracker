@@ -6,6 +6,9 @@ import "./globals.css";
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
+  preload: true,
+  adjustFontFallback: true,
+  fallback: ["SF Pro Text", "SF Pro Display", "system-ui", "sans-serif"],
   variable: "--font-inter",
 });
 
