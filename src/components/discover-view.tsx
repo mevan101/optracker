@@ -14,13 +14,13 @@ const FILTERS = [
   { id: "onsite", label: "On-site" },
 ] as const;
 
-export function DiscoverView() {
+export function DiscoverView({ initial }: { initial: JobsResponse }) {
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [workMode, setWorkMode] = useState("all");
-  const [data, setData] = useState<JobsResponse | null>(null);
+  const [data, setData] = useState<JobsResponse>(initial);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebounced(query.trim()), 180);
@@ -29,7 +29,10 @@ export function DiscoverView() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    const isDefault = !debounced && workMode === "all";
+    if (!isDefault) {
+      setLoading(true);
+    }
     setError(null);
     fetchJobs({
       q: debounced || undefined,
@@ -55,7 +58,7 @@ export function DiscoverView() {
     };
   }, [debounced, workMode]);
 
-  const remaining = data?.budget.remaining ?? 0;
+  const remaining = data.budget.remaining;
   const emptyCopy = useMemo(() => {
     if (debounced || workMode !== "all") {
       return "Nothing in the live catalog matches that filter.";
@@ -104,21 +107,19 @@ export function DiscoverView() {
         ))}
       </div>
 
-      {data ? (
-        <div className="mb-4 flex items-center justify-between text-[12px] text-ash">
-          <span>
-            {data.total} live
-            {data.hidden ? ` · ${data.hidden} hidden` : ""}
-          </span>
-          <span>{remaining} pulses left today</span>
-        </div>
-      ) : null}
+      <div className="mb-4 flex items-center justify-between text-[12px] text-ash">
+        <span>
+          {data.total} live
+          {data.hidden ? ` · ${data.hidden} hidden` : ""}
+        </span>
+        <span>{remaining} pulses left today</span>
+      </div>
 
       {loading ? <SkeletonList /> : null}
       {!loading && error ? (
         <ErrorState body={error} onRetry={() => setDebounced((value) => value)} />
       ) : null}
-      {!loading && !error && data && data.listings.length === 0 ? (
+      {!loading && !error && data.listings.length === 0 ? (
         <EmptyState
           title="Quiet board"
           body={emptyCopy}
@@ -132,7 +133,7 @@ export function DiscoverView() {
           }
         />
       ) : null}
-      {!loading && !error && data && data.listings.length > 0 ? (
+      {!loading && !error && data.listings.length > 0 ? (
         <div className="space-y-3">
           {data.listings.map((listing) => (
             <JobCard key={listing.id} listing={listing} />

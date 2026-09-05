@@ -1,5 +1,20 @@
 import { DiscoverView } from "@/components/discover-view";
+import { presentCatalog } from "@/lib/crawl/orchestrator";
+import { readCatalog } from "@/lib/store/persistence";
+
+export const dynamic = "force-dynamic";
 
 export default function HomePage() {
-  return <DiscoverView />;
+  const presented = presentCatalog(readCatalog());
+  return (
+    <DiscoverView
+      initial={{
+        listings: presented.listings,
+        total: presented.listings.length,
+        hidden: presented.hidden,
+        updatedAt: presented.updatedAt,
+        budget: presented.budget,
+      }}
+    />
+  );
 }

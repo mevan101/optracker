@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { classifyListing } from "@/lib/domain/filters";
-import { isCrawlablePlatform } from "@/lib/domain/platforms";
+import { isAllowedPlatform, isCrawlablePlatform } from "@/lib/domain/platforms";
 import {
   emptyIntegrityStats,
   MAX_ACCEPTED_PER_SOURCE,
@@ -106,6 +106,9 @@ export interface CrawlResult {
 
 export async function crawlPlatform(options: CrawlOptions): Promise<CrawlResult> {
   const now = options.now ?? new Date();
+  if (!isAllowedPlatform(options.platformId)) {
+    throw new CrawlSourceError("Unknown platform.");
+  }
   if (!isCrawlablePlatform(options.platformId)) {
     throw new CrawlSourceError(
       "That platform is a directory destination and is not crawled.",

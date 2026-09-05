@@ -10,14 +10,20 @@ import {
 import { EmptyState, ErrorState } from "@/components/states";
 import type { CrawlBudget, IntegrityStats } from "@/lib/domain/types";
 
-export function PulseView() {
-  const [platforms, setPlatforms] = useState<PlatformRow[]>([]);
-  const [budget, setBudget] = useState<CrawlBudget | null>(null);
+export function PulseView({
+  initialPlatforms,
+  initialBudget,
+}: {
+  initialPlatforms: PlatformRow[];
+  initialBudget: CrawlBudget;
+}) {
+  const [platforms, setPlatforms] = useState<PlatformRow[]>(initialPlatforms);
+  const [budget, setBudget] = useState<CrawlBudget | null>(initialBudget);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastStats, setLastStats] = useState<IntegrityStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);

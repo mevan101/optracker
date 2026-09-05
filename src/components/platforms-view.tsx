@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { fetchPlatforms, type PlatformRow } from "@/lib/client/api";
+import { fetchPlatforms, type PlatformRow, type PlatformsResponse } from "@/lib/client/api";
 import { EmptyState, ErrorState, SkeletonList } from "@/components/states";
 
-export function PlatformsView() {
-  const [platforms, setPlatforms] = useState<PlatformRow[]>([]);
+export function PlatformsView({ initial }: { initial: PlatformsResponse }) {
+  const [platforms, setPlatforms] = useState<PlatformRow[]>(initial.platforms);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   function load() {
     setLoading(true);
@@ -46,7 +46,7 @@ export function PlatformsView() {
         <EmptyState title="No platforms" body="The curated catalog is empty." />
       ) : null}
       {!loading && !error ? (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           {platforms.map((platform) => (
             <a
               key={platform.id}
