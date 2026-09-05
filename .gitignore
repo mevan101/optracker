@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+dist
+coverage
+*.log
+.DS_Store
+.env
+.env*.local
+data/catalog.json
+data/*.bak
+.turbo
+tsconfig.tsbuildinfo
