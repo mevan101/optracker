@@ -61,6 +61,11 @@ a {
   color: inherit;
 }
 
+:focus-visible {
+  outline: 1px solid rgba(245, 245, 247, 0.55);
+  outline-offset: 3px;
+}
+
 .whisper {
   box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
 }
@@ -117,7 +122,6 @@ a {
     transform 180ms var(--ease-luxury),
     opacity 180ms var(--ease-luxury),
     background-color 180ms var(--ease-luxury);
-  will-change: transform;
 }
 
 .lift:hover {

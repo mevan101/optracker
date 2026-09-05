@@ -43,5 +43,6 @@ describe("filterListings", () => {
     expect(filterListings(listings, "", "remote")).toHaveLength(1);
     expect(filterListings(listings, "robo", "all")[0]?.company).toBe("Roboflow");
     expect(filterListings(listings, "zzzz", "all")).toHaveLength(0);
+    expect(filterListings(listings, "", "all", "arbeitnow")).toHaveLength(1);
   });
 });

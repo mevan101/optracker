@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { JobDetail } from "@/components/job-detail";
 import { presentCatalog } from "@/lib/crawl/orchestrator";
@@ -6,15 +7,32 @@ import { EmptyState } from "@/components/states";
 
 export const dynamic = "force-dynamic";
 
+function listingFromParam(id: string) {
+  const decoded = decodeURIComponent(id);
+  const { listings } = presentCatalog(readCatalog());
+  return listings.find((item) => item.id === decoded);
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const listing = listingFromParam(id);
+  if (!listing) {
+    return { title: "Role unavailable" };
+  }
+  return { title: `${listing.title} at ${listing.company}` };
+}
+
 export default async function JobPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const decoded = decodeURIComponent(id);
-  const { listings } = presentCatalog(readCatalog());
-  const listing = listings.find((item) => item.id === decoded);
+  const listing = listingFromParam(id);
 
   if (!listing) {
     return (
@@ -24,7 +42,7 @@ export default async function JobPage({
         action={
           <Link
             href="/"
-            className="glass-strong inline-flex rounded-full px-5 py-2 text-[13px] text-ivory"
+            className="pressable glass-strong inline-flex rounded-full px-5 py-2 text-[13px] text-ivory"
           >
             Return to Discover
           </Link>

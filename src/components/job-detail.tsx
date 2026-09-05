@@ -25,6 +25,8 @@ export function JobDetail({ listing }: { listing: JobListing }) {
         <button
           type="button"
           onClick={() => setSaved(toggleSaved(listing.id).includes(listing.id))}
+          aria-pressed={saved}
+          aria-label={saved ? "Remove saved role" : "Save role"}
           className="pressable panel flex min-w-[5.5rem] items-center justify-center gap-2 rounded-full px-3 py-1.5 text-[12px] text-ivory"
         >
           <IconBookmark size={14} filled={saved} />

@@ -12,6 +12,7 @@ import {
 } from "@/lib/domain/types";
 import { validateListing } from "@/lib/domain/validation";
 import { consumeBudget, resolveBudget } from "./budget";
+import { withCrawlLock } from "./lock";
 import { normalizeSourceRow, unwrapSourceRows } from "./normalize";
 import { getSource } from "./sources";
 import { readCatalog, replacePlatformListings, writeCatalog } from "@/lib/store/persistence";
@@ -105,6 +106,10 @@ export interface CrawlResult {
 }
 
 export async function crawlPlatform(options: CrawlOptions): Promise<CrawlResult> {
+  return withCrawlLock(() => crawlPlatformUnlocked(options));
+}
+
+async function crawlPlatformUnlocked(options: CrawlOptions): Promise<CrawlResult> {
   const now = options.now ?? new Date();
   if (!isAllowedPlatform(options.platformId)) {
     throw new CrawlSourceError("Unknown platform.");
@@ -192,7 +197,13 @@ function makeAttempt(partial: Omit<CrawlAttempt, "id">): CrawlAttempt {
 }
 
 export function presentCatalog(snapshot: CatalogSnapshot, now = new Date()) {
-  const live = snapshot.listings.filter((listing) => !classifyListing(listing, now));
+  const live = snapshot.listings.flatMap((listing) => {
+    const validated = validateListing(listing);
+    if (!validated.ok || classifyListing(validated.listing, now)) {
+      return [];
+    }
+    return [validated.listing];
+  });
   return {
     listings: live.sort((a, b) => {
       const aTime = a.postedAt ? Date.parse(a.postedAt) : 0;

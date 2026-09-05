@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconBookmark, IconCompass, IconRadio, IconRows } from "@/components/icons";
+import { isActivePath } from "@/lib/nav/active-path";
 
 const NAV = [
   { href: "/", label: "Discover", icon: IconCompass },
@@ -11,23 +12,20 @@ const NAV = [
   { href: "/saved", label: "Saved", icon: IconBookmark },
 ] as const;
 
-function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
-}
-
 export function SideNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="mt-10 space-y-1">
+    <nav className="mt-10 space-y-1" aria-label="Primary">
       {NAV.map((item) => {
-        const active = isActive(pathname, item.href);
+        const active = isActivePath(pathname, item.href);
         return (
           <Link
             key={item.href}
             href={item.href}
             prefetch
             data-active={active}
+            aria-current={active ? "page" : undefined}
             className={`nav-item flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[15px] ${
               active ? "glass-strong text-ivory" : "text-mist hover:text-ivory"
             }`}
@@ -45,16 +43,20 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="bottom-safe glass fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[430px] px-4 pt-2 lg:hidden">
+    <nav
+      className="bottom-safe glass fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[430px] px-4 pt-2 lg:hidden"
+      aria-label="Primary"
+    >
       <div className="grid grid-cols-4">
         {NAV.map((item) => {
-          const active = isActive(pathname, item.href);
+          const active = isActivePath(pathname, item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               prefetch
               data-active={active}
+              aria-current={active ? "page" : undefined}
               className={`nav-item flex min-h-12 flex-col items-center justify-center gap-0.5 text-[10px] ${
                 active ? "text-ivory" : "text-ash"
               }`}

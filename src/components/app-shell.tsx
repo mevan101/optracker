@@ -22,7 +22,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="relative min-h-dvh flex-1 lg:my-6 lg:min-h-[calc(100dvh-3rem)] lg:overflow-auto lg:rounded-[32px] lg:whisper">
-        <div className="page-enter app-safe px-5 lg:px-8">{children}</div>
+        <main id="board" className="page-enter app-safe px-5 lg:px-8">
+          {children}
+        </main>
         <BottomNav />
       </div>
     </div>

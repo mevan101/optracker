@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   fetchPlatforms,
   formatIntegrity,
@@ -23,6 +24,7 @@ export function PulseView({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastStats, setLastStats] = useState<IntegrityStats | null>(null);
+  const router = useRouter();
 
   async function refresh() {
     setError(null);
@@ -52,6 +54,7 @@ export function PulseView({
         setMessage(result.attempt?.error ?? "The source did not return a usable feed.");
       }
       await refresh();
+      router.refresh();
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Pulse refused.");
     } finally {
@@ -131,7 +134,8 @@ export function PulseView({
                   type="button"
                   disabled={busyId !== null || budget.remaining < 1}
                   onClick={() => void runPulse(platform.id)}
-                  className="pressable rounded-full bg-ivory px-4 py-2 text-[13px] font-medium text-obsidian disabled:opacity-40"
+                  aria-label={`Pulse ${platform.name}`}
+                  className="pressable rounded-full bg-ivory px-4 py-2 text-[13px] font-medium text-[#09090b] disabled:opacity-40"
                 >
                   {busyId === platform.id ? "Pulsing…" : "Pulse"}
                 </button>

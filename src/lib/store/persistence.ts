@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { CatalogSnapshot, CrawlAttempt, JobListing } from "@/lib/domain/types";
 import { utcDay } from "@/lib/domain/text";
@@ -47,7 +47,18 @@ export function writeCatalog(
   filePath = DEFAULT_PATH,
 ): void {
   mkdirSync(path.dirname(filePath), { recursive: true });
-  writeFileSync(filePath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
+  const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  writeFileSync(tempPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
+  try {
+    renameSync(tempPath, filePath);
+  } catch (error) {
+    try {
+      unlinkSync(tempPath);
+    } catch {
+      // The temp file is best-effort cleanup only.
+    }
+    throw error;
+  }
 }
 
 export function replacePlatformListings(

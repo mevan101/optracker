@@ -13,7 +13,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "OpTracker",
+  title: {
+    default: "OpTracker",
+    template: "%s · OpTracker",
+  },
   description:
     "A quiet job-platform viewer. Live roles from public APIs, with expired, broken, mock, and placeholder listings removed.",
   appleWebApp: {

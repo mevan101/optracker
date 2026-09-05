@@ -4,9 +4,13 @@ export function filterListings(
   listings: JobListing[],
   query: string,
   workMode: string,
+  platformId = "all",
 ): JobListing[] {
   const q = query.trim().toLowerCase();
   return listings.filter((listing) => {
+    if (platformId !== "all" && listing.platformId !== platformId) {
+      return false;
+    }
     if (workMode !== "all" && listing.workMode !== workMode) {
       return false;
     }

@@ -6,6 +6,7 @@ export function JobCard({ listing }: { listing: JobListing }) {
   return (
     <Link
       href={`/jobs/${encodeURIComponent(listing.id)}`}
+      aria-label={`${listing.title} at ${listing.company}`}
       className="panel lift block rounded-[22px] p-4"
     >
       <div className="flex items-start gap-3">

@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import { PulseView } from "@/components/pulse-view";
 import { JOB_PLATFORMS } from "@/lib/domain/platforms";
 import { presentCatalog } from "@/lib/crawl/orchestrator";
 import { readCatalog } from "@/lib/store/persistence";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Pulse" };
 
 export default function PulsePage() {
   const presented = presentCatalog(readCatalog());

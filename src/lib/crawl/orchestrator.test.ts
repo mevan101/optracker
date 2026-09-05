@@ -2,8 +2,8 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { readCatalog } from "@/lib/store/persistence";
-import { crawlPlatform, screenListings } from "./orchestrator";
+import { readCatalog, writeCatalog } from "@/lib/store/persistence";
+import { crawlPlatform, presentCatalog, screenListings } from "./orchestrator";
 
 const now = new Date("2026-09-05T12:00:00Z");
 
@@ -122,5 +122,94 @@ describe("crawlPlatform", () => {
     await expect(
       crawlPlatform({ platformId: "jobicy", catalogPath, now, fetchPayload }),
     ).rejects.toThrow(/limit/i);
+  });
+
+  it("serializes overlapping pulses so a fifth remaining slot cannot be spent twice", async () => {
+    const catalogPath = path.join(mkdtempSync(path.join(tmpdir(), "optracker-")), "catalog.json");
+    writeCatalog(
+      {
+        version: 1,
+        updatedAt: null,
+        listings: [],
+        lastAttempts: [],
+        budget: { date: "2026-09-05", used: 4, log: [] },
+      },
+      catalogPath,
+    );
+
+    const fetchPayload = async () => ({
+      jobs: [
+        {
+          id: 30,
+          url: "https://jobicy.com/jobs/30-role",
+          jobTitle: "Researcher",
+          companyName: "Anthropic",
+          jobGeo: "Remote",
+          pubDate: "2026-09-04T00:00:00+00:00",
+          jobExcerpt: "Study the board.",
+        },
+      ],
+    });
+
+    const results = await Promise.allSettled([
+      crawlPlatform({ platformId: "jobicy", catalogPath, now, fetchPayload }),
+      crawlPlatform({ platformId: "jobicy", catalogPath, now, fetchPayload }),
+    ]);
+
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    expect(readCatalog(catalogPath).budget.used).toBe(5);
+  });
+});
+
+describe("presentCatalog", () => {
+  it("hides stored mock or schema-invalid rows on read", () => {
+    const presented = presentCatalog(
+      {
+        version: 1,
+        updatedAt: "2026-09-05T12:00:00.000Z",
+        listings: [
+          {
+            id: "jobicy:1",
+            platformId: "jobicy",
+            platformName: "Jobicy",
+            title: "Support Engineer",
+            company: "Roboflow",
+            location: "USA",
+            workMode: "remote",
+            url: "https://jobicy.com/jobs/1",
+            postedAt: "2026-09-05T06:08:42.000Z",
+            expiresAt: null,
+            tags: ["Support"],
+            salary: null,
+            excerpt: "Vision tools.",
+            sourceRecordId: "1",
+          },
+          {
+            id: "mock-99",
+            platformId: "jobicy",
+            platformName: "Jobicy",
+            title: "Dummy Job",
+            company: "Acme Corp",
+            location: "USA",
+            workMode: "remote",
+            url: "https://jobicy.com/jobs/99",
+            postedAt: "2026-09-05T06:08:42.000Z",
+            expiresAt: null,
+            tags: ["Test"],
+            salary: null,
+            excerpt: "lorem ipsum",
+            sourceRecordId: "99",
+          },
+        ],
+        lastAttempts: [],
+        budget: { date: "2026-09-05", used: 1, log: [] },
+      },
+      now,
+    );
+
+    expect(presented.listings).toHaveLength(1);
+    expect(presented.listings[0]?.title).toBe("Support Engineer");
+    expect(presented.hidden).toBe(1);
   });
 });

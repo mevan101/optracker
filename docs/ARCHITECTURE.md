@@ -66,3 +66,5 @@ Apple ultra-premium luxury minimalism: obsidian `#09090b`, Inter + SF Pro stack,
 - Job cards use paint-cheap `.panel` surfaces (no backdrop-filter). Blur is reserved for the tab bar.
 - Motion is transform/opacity only (`translate3d` / `scale3d` / `scaleX`), with `prefers-reduced-motion` respected.
 - Reserved min-heights on headers, empty states, and cards reduce layout shift at 402px.
+- Catalog writes are atomic. Overlapping pulses are serialized so the daily cap cannot be double-spent.
+- `presentCatalog` re-validates stored rows so a corrupt or mock record cannot reappear on read.

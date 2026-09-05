@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { filterListings } from "@/lib/client/filter-listings";
 import type { JobsResponse } from "@/lib/client/api";
-import { IconSearch } from "@/components/icons";
+import { IconClose, IconSearch } from "@/components/icons";
 import { JobCard, Pill } from "@/components/job-card";
 import { EmptyState } from "@/components/states";
 
@@ -18,13 +18,24 @@ const FILTERS = [
 export function DiscoverView({ initial }: { initial: JobsResponse }) {
   const [query, setQuery] = useState("");
   const [workMode, setWorkMode] = useState("all");
+  const [platformId, setPlatformId] = useState("all");
+
+  const platforms = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const listing of initial.listings) {
+      if (!seen.has(listing.platformId)) {
+        seen.set(listing.platformId, listing.platformName);
+      }
+    }
+    return [...seen.entries()].map(([id, name]) => ({ id, name }));
+  }, [initial.listings]);
 
   const listings = useMemo(
-    () => filterListings(initial.listings, query, workMode),
-    [initial.listings, query, workMode],
+    () => filterListings(initial.listings, query, workMode, platformId),
+    [initial.listings, query, workMode, platformId],
   );
 
-  const filtered = Boolean(query.trim() || workMode !== "all");
+  const filtered = Boolean(query.trim() || workMode !== "all" || platformId !== "all");
   const emptyCopy = filtered
     ? "Nothing in the live catalog matches that filter."
     : "The board is empty until a pulse fetches real listings. Nothing is fabricated.";
@@ -51,16 +62,28 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search title, company, city"
+          aria-label="Search roles"
           className="w-full bg-transparent text-[15px] text-ivory outline-none placeholder:text-ash"
         />
+        {query ? (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            className="pressable text-ash"
+          >
+            <IconClose />
+          </button>
+        ) : null}
       </label>
 
-      <div className="no-scrollbar mb-5 flex min-h-9 gap-2 overflow-x-auto">
+      <div className="no-scrollbar mb-3 flex min-h-9 gap-2 overflow-x-auto">
         {FILTERS.map((filter) => (
           <button
             key={filter.id}
             type="button"
             onClick={() => setWorkMode(filter.id)}
+            aria-pressed={workMode === filter.id}
             className={`pressable rounded-full px-3.5 py-1.5 text-[13px] ${
               workMode === filter.id
                 ? "bg-ivory text-obsidian"
@@ -71,6 +94,38 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
           </button>
         ))}
       </div>
+
+      {platforms.length > 1 ? (
+        <div className="no-scrollbar mb-5 flex min-h-9 gap-2 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setPlatformId("all")}
+            aria-pressed={platformId === "all"}
+            className={`pressable rounded-full px-3.5 py-1.5 text-[13px] ${
+              platformId === "all" ? "bg-ivory text-obsidian" : "panel text-mist"
+            }`}
+          >
+            Every board
+          </button>
+          {platforms.map((platform) => (
+            <button
+              key={platform.id}
+              type="button"
+              onClick={() => setPlatformId(platform.id)}
+              aria-pressed={platformId === platform.id}
+              className={`pressable rounded-full px-3.5 py-1.5 text-[13px] ${
+                platformId === platform.id
+                  ? "bg-ivory text-obsidian"
+                  : "panel text-mist"
+              }`}
+            >
+              {platform.name}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="mb-5" />
+      )}
 
       <div className="mb-4 flex min-h-4 items-center justify-between text-[12px] text-ash">
         <span>
