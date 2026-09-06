@@ -46,6 +46,10 @@ export function BottomNav() {
       className="bottom-safe glass hairline-t fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[402px] px-1 pt-2 lg:hidden"
       aria-label="Primary"
     >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-full h-8 bg-gradient-to-t from-obsidian to-transparent"
+      />
       <div className="grid grid-cols-4">
         {NAV.map((item) => {
           const active = isActivePath(pathname, item.href);

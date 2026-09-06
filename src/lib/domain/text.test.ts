@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { companyInitials, excerptFrom, stripHtml, utcDay, workModeLabel } from "./text";
+import { companyInitials, excerptFrom, polishExcerpt, stripHtml, utcDay, workModeLabel } from "./text";
 
 describe("text helpers", () => {
   it("strips markup and entities", () => {
@@ -13,6 +13,12 @@ describe("text helpers", () => {
 
   it("prints a UTC day key", () => {
     expect(utcDay(new Date("2026-09-05T23:30:00Z"))).toBe("2026-09-05");
+  });
+
+  it("drops smashed section headings from excerpts", () => {
+    expect(polishExcerpt("Who We Are Our mission is to ship.")).toBe(
+      "Our mission is to ship.",
+    );
   });
 
   it("labels work modes", () => {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { IconArrowLeft, IconBookmark } from "@/components/icons";
-import { formatRelative, workModeLabel } from "@/lib/domain/text";
+import { formatRelative, polishExcerpt, workModeLabel } from "@/lib/domain/text";
 import { readSavedIds, toggleSaved } from "@/lib/client/saved";
 import type { JobListing } from "@/lib/domain/types";
 
@@ -61,7 +61,8 @@ export function JobDetail({ listing }: { listing: JobListing }) {
       </dl>
 
       <p className="mt-8 text-[16px] leading-7 tracking-[-0.012em] text-ivory/90">
-        {listing.excerpt || "This listing did not include a usable excerpt."}
+        {polishExcerpt(listing.excerpt) ||
+          "This listing did not include a usable excerpt."}
       </p>
 
       <a

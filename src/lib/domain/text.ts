@@ -28,8 +28,23 @@ export function stripHtml(input: string): string {
     .trim();
 }
 
+const EXCERPT_PREFIX =
+  /^(who we are|about (us|the (company|role|job|team))|overview|job description)\b[:.\s-]*/i;
+
+export function polishExcerpt(text: string): string {
+  let clean = stripHtml(text);
+  for (let i = 0; i < 3; i += 1) {
+    const next = clean.replace(EXCERPT_PREFIX, "").trim();
+    if (next === clean) {
+      break;
+    }
+    clean = next;
+  }
+  return clean;
+}
+
 export function excerptFrom(text: string, max = 180): string {
-  const clean = stripHtml(text);
+  const clean = polishExcerpt(text);
   if (clean.length <= max) {
     return clean;
   }
