@@ -1,9 +1,9 @@
 export function IconCompass({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M12 7.25v9.5M7.25 12h9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+      <circle cx="12" cy="7" r="1.35" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.35" fill="currentColor" />
+      <circle cx="12" cy="17" r="1.35" fill="currentColor" />
     </svg>
   );
 }
