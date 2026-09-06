@@ -2,27 +2,19 @@ import { BottomNav, SideNav } from "@/components/nav-links";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col lg:max-w-[1080px] lg:flex-row lg:gap-10 lg:px-8">
-      <aside className="hidden w-[220px] shrink-0 flex-col justify-between py-10 lg:flex">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[402px] flex-col lg:max-w-[980px] lg:flex-row lg:gap-16 lg:px-10">
+      <aside className="hidden w-[200px] shrink-0 flex-col justify-between py-14 lg:flex">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-mist">
-            OpTracker
-          </p>
-          <h1 className="mt-3 text-[28px] font-semibold leading-none text-ivory">
-            Quiet boards.
-            <br />
-            Living roles.
-          </h1>
+          <p className="text-[15px] font-medium tracking-[-0.03em] text-ivory">Op</p>
           <SideNav />
         </div>
         <p className="text-[12px] leading-5 text-ash">
-          Five pulses a day. Expired, broken, mock, and placeholder listings never
-          reach the board.
+          Five pulses a day. Nothing invented.
         </p>
       </aside>
 
-      <div className="relative min-h-dvh flex-1 lg:my-6 lg:min-h-[calc(100dvh-3rem)] lg:overflow-auto lg:rounded-[32px] lg:whisper">
-        <main id="board" className="page-enter app-safe px-5 lg:px-8">
+      <div className="relative min-h-dvh flex-1">
+        <main id="board" className="page-enter app-safe px-[22px] lg:px-0 lg:pt-14">
           {children}
         </main>
         <BottomNav />

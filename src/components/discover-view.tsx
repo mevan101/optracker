@@ -5,14 +5,14 @@ import { useMemo, useState } from "react";
 import { filterListings } from "@/lib/client/filter-listings";
 import type { JobsResponse } from "@/lib/client/api";
 import { IconClose, IconSearch } from "@/components/icons";
-import { JobCard, Pill } from "@/components/job-card";
+import { JobCard } from "@/components/job-card";
 import { EmptyState } from "@/components/states";
 
 const FILTERS = [
   { id: "all", label: "All" },
   { id: "remote", label: "Remote" },
   { id: "hybrid", label: "Hybrid" },
-  { id: "onsite", label: "On-site" },
+  { id: "onsite", label: "Site" },
 ] as const;
 
 export function DiscoverView({ initial }: { initial: JobsResponse }) {
@@ -36,34 +36,29 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
   );
 
   const filtered = Boolean(query.trim() || workMode !== "all" || platformId !== "all");
-  const emptyCopy = filtered
-    ? "Nothing in the live catalog matches that filter."
-    : "The board is empty until a pulse fetches real listings. Nothing is fabricated.";
 
   return (
     <div>
-      <header className="mb-6 min-h-[92px]">
-        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-mist lg:hidden">
-          OpTracker
-        </p>
-        <h1 className="mt-2 text-[32px] font-semibold leading-none text-ivory lg:mt-0">
-          Discover
+      <header className="mb-7 flex items-end justify-between">
+        <h1 className="text-[28px] font-medium leading-none tracking-[-0.04em] text-ivory">
+          Roles
         </h1>
-        <p className="mt-2 text-[14px] text-mist">
-          Verified roles from public job-platform APIs.
+        <p className="text-[13px] text-ash">
+          {listings.length}
+          {initial.hidden ? ` · ${initial.hidden} out` : ""}
         </p>
       </header>
 
-      <label className="panel mb-4 flex min-h-12 items-center gap-3 rounded-full px-4">
+      <label className="hairline-x mb-5 flex min-h-11 items-center gap-3 pb-2">
         <span className="text-ash">
           <IconSearch />
         </span>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search title, company, city"
+          placeholder="Search"
           aria-label="Search roles"
-          className="w-full bg-transparent text-[15px] text-ivory outline-none placeholder:text-ash"
+          className="w-full bg-transparent text-[16px] font-normal tracking-[-0.02em] text-ivory outline-none placeholder:text-ash"
         />
         {query ? (
           <button
@@ -77,17 +72,16 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
         ) : null}
       </label>
 
-      <div className="no-scrollbar mb-3 flex min-h-9 gap-2 overflow-x-auto">
+      <div className="segment mb-3" role="tablist" aria-label="Work mode">
         {FILTERS.map((filter) => (
           <button
             key={filter.id}
             type="button"
+            role="tab"
+            aria-selected={workMode === filter.id}
             onClick={() => setWorkMode(filter.id)}
-            aria-pressed={workMode === filter.id}
-            className={`pressable rounded-full px-3.5 py-1.5 text-[13px] ${
-              workMode === filter.id
-                ? "bg-ivory text-obsidian"
-                : "panel text-mist"
+            className={`min-h-8 text-[12px] tracking-[-0.01em] ${
+              workMode === filter.id ? "text-ivory" : "text-ash"
             }`}
           >
             {filter.label}
@@ -96,16 +90,14 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
       </div>
 
       {platforms.length > 1 ? (
-        <div className="no-scrollbar mb-5 flex min-h-9 gap-2 overflow-x-auto">
+        <div className="no-scrollbar mb-6 flex gap-4 overflow-x-auto text-[13px]">
           <button
             type="button"
             onClick={() => setPlatformId("all")}
             aria-pressed={platformId === "all"}
-            className={`pressable rounded-full px-3.5 py-1.5 text-[13px] ${
-              platformId === "all" ? "bg-ivory text-obsidian" : "panel text-mist"
-            }`}
+            className={platformId === "all" ? "text-ivory" : "text-ash"}
           >
-            Every board
+            All boards
           </button>
           {platforms.map((platform) => (
             <button
@@ -113,54 +105,37 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
               type="button"
               onClick={() => setPlatformId(platform.id)}
               aria-pressed={platformId === platform.id}
-              className={`pressable rounded-full px-3.5 py-1.5 text-[13px] ${
-                platformId === platform.id
-                  ? "bg-ivory text-obsidian"
-                  : "panel text-mist"
-              }`}
+              className={platformId === platform.id ? "text-ivory" : "text-ash"}
             >
               {platform.name}
             </button>
           ))}
         </div>
       ) : (
-        <div className="mb-5" />
+        <div className="mb-4" />
       )}
-
-      <div className="mb-4 flex min-h-4 items-center justify-between text-[12px] text-ash">
-        <span>
-          {listings.length} live
-          {initial.hidden ? ` · ${initial.hidden} hidden` : ""}
-        </span>
-        <span>{initial.budget.remaining} pulses left today</span>
-      </div>
 
       {listings.length === 0 ? (
         <EmptyState
-          title="Quiet board"
-          body={emptyCopy}
+          title={filtered ? "Nothing matches." : "The board is empty."}
+          body={
+            filtered
+              ? "Clear the filter, or pulse another board."
+              : "Pulse a public API. Listings are never invented."
+          }
           action={
-            <Link
-              href="/pulse"
-              className="pressable glass-strong inline-flex rounded-full px-5 py-2 text-[13px] text-ivory"
-            >
+            <Link href="/pulse" className="pressable text-[14px] text-ivory">
               Open Pulse
             </Link>
           }
         />
       ) : (
-        <div className="card-list space-y-3">
+        <div className="card-list">
           {listings.map((listing) => (
             <JobCard key={listing.id} listing={listing} />
           ))}
         </div>
       )}
-
-      <div className="mt-6 flex min-h-6 flex-wrap gap-1.5">
-        <Pill>No mock data</Pill>
-        <Pill>No placeholders</Pill>
-        <Pill>Expired listings removed</Pill>
-      </div>
     </div>
   );
 }

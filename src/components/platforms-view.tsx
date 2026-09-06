@@ -1,54 +1,36 @@
-import { IconArrowUpRight } from "@/components/icons";
 import { EmptyState } from "@/components/states";
 import type { PlatformRow } from "@/lib/client/api";
 
 export function PlatformsView({ platforms }: { platforms: PlatformRow[] }) {
   return (
     <div>
-      <header className="mb-6 min-h-[92px]">
-        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-mist lg:hidden">
-          Platforms
-        </p>
-        <h1 className="mt-2 text-[32px] font-semibold leading-none text-ivory lg:mt-0">
+      <header className="mb-8">
+        <h1 className="text-[28px] font-medium leading-none tracking-[-0.04em] text-ivory">
           Boards
         </h1>
-        <p className="mt-2 text-[14px] text-mist">
-          Real job platforms only. API boards can be pulsed. Directory boards open
-          at the source.
-        </p>
       </header>
 
       {platforms.length === 0 ? (
-        <EmptyState title="No platforms" body="The curated catalog is empty." />
+        <EmptyState title="No boards." body="The curated catalog is empty." />
       ) : (
-        <div className="card-list grid gap-3 lg:grid-cols-2">
+        <div className="card-list">
           {platforms.map((platform) => (
             <a
               key={platform.id}
               href={platform.homeUrl}
               target="_blank"
               rel="noreferrer"
-              className="panel lift rounded-[24px] p-5"
+              className="row hairline-x flex items-baseline justify-between gap-6 py-4"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-ash">
-                    {platform.crawlable ? "Public API" : "Directory"}
-                  </p>
-                  <h2 className="mt-2 text-[18px] font-semibold text-ivory">
-                    {platform.name}
-                  </h2>
-                </div>
-                <span className="text-ash">
-                  <IconArrowUpRight />
-                </span>
+              <div className="min-w-0">
+                <h2 className="text-[16px] font-medium tracking-[-0.03em] text-ivory">
+                  {platform.name}
+                </h2>
+                <p className="mt-1 text-[13px] text-ash">
+                  {platform.crawlable ? "Public API" : "Directory"}
+                </p>
               </div>
-              <p className="mt-3 min-h-10 text-[13px] leading-5 text-mist">
-                {platform.description}
-              </p>
-              <div className="mt-4 text-[12px] text-ash">
-                {platform.liveCount} live roles in OpTracker
-              </div>
+              <p className="shrink-0 text-[13px] text-ash">{platform.liveCount}</p>
             </a>
           ))}
         </div>

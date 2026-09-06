@@ -37,14 +37,11 @@ export default async function JobPage({
   if (!listing) {
     return (
       <EmptyState
-        title="This role is gone"
-        body="It is missing, expired, or was filtered as broken, mock, or placeholder."
+        title="This role is gone."
+        body="It is missing, expired, or was filtered out."
         action={
-          <Link
-            href="/"
-            className="pressable glass-strong inline-flex rounded-full px-5 py-2 text-[13px] text-ivory"
-          >
-            Return to Discover
+          <Link href="/" className="pressable text-[14px] text-ivory">
+            Back to Roles
           </Link>
         }
       />

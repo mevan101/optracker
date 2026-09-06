@@ -24,39 +24,31 @@ export function SavedView({ listings }: { listings: JobListing[] }) {
 
   return (
     <div>
-      <header className="mb-6 min-h-[110px]">
-        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-mist lg:hidden">
-          Collection
-        </p>
-        <h1 className="mt-2 text-[32px] font-semibold leading-none text-ivory lg:mt-0">
+      <header className="mb-8 flex items-end justify-between">
+        <h1 className="text-[28px] font-medium leading-none tracking-[-0.04em] text-ivory">
           Saved
         </h1>
-        <p className="mt-2 text-[14px] text-mist">
-          Kept on this device. Roles disappear if they fail a later integrity pass.
-        </p>
+        {ids ? <p className="text-[13px] text-ash">{saved.length}</p> : null}
       </header>
 
       {ids === null ? (
-        <div className="panel min-h-[148px] rounded-[22px]" />
+        <div className="hairline-x min-h-[76px]" />
       ) : saved.length === 0 ? (
         <EmptyState
-          title={ids.length ? "Saved roles are no longer live" : "Nothing saved"}
+          title={ids.length ? "Those roles are gone." : "Nothing saved."}
           body={
             ids.length
-              ? "Those bookmarks pointed at listings that were filtered out or not yet pulsed."
-              : "Save a live role from Discover. Empty is honest."
+              ? "Bookmarks only stay if the listing still passes integrity."
+              : "Save a live role from the board."
           }
           action={
-            <Link
-              href="/"
-              className="pressable glass-strong inline-flex rounded-full px-5 py-2 text-[13px] text-ivory"
-            >
-              Back to Discover
+            <Link href="/" className="pressable text-[14px] text-ivory">
+              Back to Roles
             </Link>
           }
         />
       ) : (
-        <div className="card-list space-y-3">
+        <div className="card-list">
           {saved.map((listing) => (
             <JobCard key={listing.id} listing={listing} />
           ))}

@@ -6,9 +6,8 @@ The previous repository was an empty stub. This rebuild adds the product archite
 
 ## Design
 
-- Apple ultra-premium luxury minimalism
-- Obsidian / slate canvas `#09090b`
-- Restrained glass, 0.5px whisper borders `rgba(255,255,255,0.05)`
+- Editorial luxury on obsidian `#09090b`
+- Hairline lists, almost no cards or chips
 - Inter + SF Pro, tracking `-0.02em`
 - Tuned for iPhone 16 Pro at 402 CSS pixels, including `safe-area-inset-top`
 
@@ -25,7 +24,7 @@ npm run dev
 
 ## Product surfaces
 
-- **Discover** — live, already-screened roles
+- **Roles** — live, already-screened listings
 - **Boards** — curated real platforms (API + directory)
 - **Pulse** — at most five source fetches per UTC day
 - **Saved** — device-local bookmarks of still-live roles

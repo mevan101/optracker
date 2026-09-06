@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { IconArrowLeft, IconArrowUpRight, IconBookmark } from "@/components/icons";
-import { companyInitials, formatRelative } from "@/lib/domain/text";
+import { IconArrowLeft, IconBookmark } from "@/components/icons";
+import { formatRelative } from "@/lib/domain/text";
 import { readSavedIds, toggleSaved } from "@/lib/client/saved";
-import { Pill } from "@/components/job-card";
 import type { JobListing } from "@/lib/domain/types";
 
 export function JobDetail({ listing }: { listing: JobListing }) {
@@ -17,57 +16,60 @@ export function JobDetail({ listing }: { listing: JobListing }) {
 
   return (
     <div>
-      <div className="mb-6 flex min-h-8 items-center justify-between">
-        <Link href="/" className="pressable flex items-center gap-2 text-[13px] text-mist">
+      <div className="mb-10 flex items-center justify-between">
+        <Link href="/" className="pressable flex items-center gap-1.5 text-[14px] text-ash">
           <IconArrowLeft />
-          Discover
+          Roles
         </Link>
         <button
           type="button"
           onClick={() => setSaved(toggleSaved(listing.id).includes(listing.id))}
           aria-pressed={saved}
           aria-label={saved ? "Remove saved role" : "Save role"}
-          className="pressable panel flex min-w-[5.5rem] items-center justify-center gap-2 rounded-full px-3 py-1.5 text-[12px] text-ivory"
+          className="pressable text-[14px] text-ivory"
         >
-          <IconBookmark size={14} filled={saved} />
-          {saved ? "Saved" : "Save"}
+          <span className="inline-flex items-center gap-1.5">
+            <IconBookmark size={15} filled={saved} />
+            {saved ? "Saved" : "Save"}
+          </span>
         </button>
       </div>
 
-      <section className="panel rounded-[28px] p-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04] text-[13px] whisper">
-          {companyInitials(listing.company)}
-        </div>
-        <h1 className="mt-5 text-[28px] font-semibold leading-8 text-ivory">
-          {listing.title}
-        </h1>
-        <p className="mt-2 text-[15px] text-mist">{listing.company}</p>
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          <Pill>{listing.platformName}</Pill>
-          <Pill>{listing.location}</Pill>
-          <Pill className="capitalize">{listing.workMode}</Pill>
-          {listing.salary ? <Pill>{listing.salary}</Pill> : null}
-        </div>
-        <p className="mt-5 text-[13px] text-ash">
-          Posted {formatRelative(listing.postedAt)}
-        </p>
-        <p className="mt-6 text-[15px] leading-7 text-ivory/80">
-          {listing.excerpt || "The source did not provide a usable excerpt."}
-        </p>
-        <a
-          href={listing.url}
-          target="_blank"
-          rel="noreferrer"
-          className="pressable mt-8 flex min-h-12 items-center justify-center gap-2 rounded-full bg-ivory text-[15px] font-semibold text-[#09090b]"
-        >
-          Open on {listing.platformName}
-          <IconArrowUpRight />
-        </a>
-        <p className="mt-4 min-h-10 text-center text-[11px] leading-5 text-ash">
-          Application happens on the original board. OpTracker does not invent
-          descriptions or apply on your behalf.
-        </p>
-      </section>
+      <p className="text-[13px] text-ash">{listing.company}</p>
+      <h1 className="mt-2 text-[32px] font-medium leading-[1.05] tracking-[-0.045em] text-ivory">
+        {listing.title}
+      </h1>
+      <p className="mt-4 text-[14px] leading-6 text-ash">
+        {listing.location}
+        <span> · </span>
+        <span className="capitalize">{listing.workMode}</span>
+        {listing.salary ? (
+          <>
+            <span> · </span>
+            {listing.salary}
+          </>
+        ) : null}
+        <span> · </span>
+        {listing.platformName}
+        <span> · </span>
+        {formatRelative(listing.postedAt)}
+      </p>
+
+      <p className="mt-10 text-[16px] leading-7 tracking-[-0.018em] text-ivory/88">
+        {listing.excerpt || "The source did not provide a usable excerpt."}
+      </p>
+
+      <a
+        href={listing.url}
+        target="_blank"
+        rel="noreferrer"
+        className="pressable hairline-t mt-12 block pt-4 text-[15px] font-medium tracking-[-0.02em] text-ivory"
+      >
+        Open on {listing.platformName}
+      </a>
+      <p className="mt-3 text-[12px] leading-5 text-ash">
+        Apply on the original board. OpTracker does not invent copy.
+      </p>
     </div>
   );
 }

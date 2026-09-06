@@ -57,7 +57,7 @@ Each card links back to the original platform URL. OpTracker does not scrape HTM
 
 ## UI
 
-Apple ultra-premium luxury minimalism: obsidian `#09090b`, Inter + SF Pro stack, `-0.02em` tracking, 0.5px whisper borders, restrained glass. Mobile chrome is tuned for iPhone 16 Pro (402 CSS px) with `viewport-fit=cover` and `safe-area-inset-top` / `safe-area-inset-bottom`. Loading, error, empty, and filtered-detail states are first-class.
+Editorial luxury on obsidian `#09090b`: Inter + SF Pro, `-0.02em` tracking, hairline separators instead of card stacks, glass reserved for the tab bar. Tuned for iPhone 16 Pro (402 CSS px) with `viewport-fit=cover` and safe-area insets. Loading, error, empty, and filtered-detail states are first-class.
 
 ## Performance
 

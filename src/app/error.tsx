@@ -10,8 +10,8 @@ export default function ErrorView({
 }) {
   return (
     <ErrorState
-      title="The board could not be drawn"
-      body="A rendering error stayed on this device. Nothing was invented to fill the gap."
+      title="Could not render."
+      body="Try again. Nothing was invented to fill the gap."
       onRetry={reset}
     />
   );

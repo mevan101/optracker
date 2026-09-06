@@ -6,7 +6,7 @@ import { IconBookmark, IconCompass, IconRadio, IconRows } from "@/components/ico
 import { isActivePath } from "@/lib/nav/active-path";
 
 const NAV = [
-  { href: "/", label: "Discover", icon: IconCompass },
+  { href: "/", label: "Roles", icon: IconCompass },
   { href: "/platforms", label: "Boards", icon: IconRows },
   { href: "/pulse", label: "Pulse", icon: IconRadio },
   { href: "/saved", label: "Saved", icon: IconBookmark },
@@ -16,7 +16,7 @@ export function SideNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="mt-10 space-y-1" aria-label="Primary">
+    <nav className="mt-12 space-y-4" aria-label="Primary">
       {NAV.map((item) => {
         const active = isActivePath(pathname, item.href);
         return (
@@ -26,11 +26,10 @@ export function SideNav() {
             prefetch
             data-active={active}
             aria-current={active ? "page" : undefined}
-            className={`nav-item flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[15px] ${
-              active ? "glass-strong text-ivory" : "text-mist hover:text-ivory"
+            className={`nav-item block text-[15px] tracking-[-0.02em] ${
+              active ? "text-ivory" : "text-ash"
             }`}
           >
-            <item.icon size={16} />
             {item.label}
           </Link>
         );
@@ -44,7 +43,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="bottom-safe glass fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[430px] px-4 pt-2 lg:hidden"
+      className="bottom-safe glass hairline-t fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[402px] px-2 pt-1.5 lg:hidden"
       aria-label="Primary"
     >
       <div className="grid grid-cols-4">
@@ -57,11 +56,9 @@ export function BottomNav() {
               prefetch
               data-active={active}
               aria-current={active ? "page" : undefined}
-              className={`nav-item flex min-h-12 flex-col items-center justify-center gap-0.5 text-[10px] ${
-                active ? "text-ivory" : "text-ash"
-              }`}
+              className="nav-item flex min-h-11 flex-col items-center justify-center gap-0.5 text-[9px] tracking-[0.04em] text-ivory"
             >
-              <item.icon size={18} />
+              <item.icon size={20} />
               {item.label}
             </Link>
           );
