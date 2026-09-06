@@ -6,13 +6,14 @@ import { filterListings } from "@/lib/client/filter-listings";
 import type { JobsResponse } from "@/lib/client/api";
 import { IconClose, IconSearch } from "@/components/icons";
 import { JobCard } from "@/components/job-card";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/states";
 
 const FILTERS = [
   { id: "all", label: "All" },
   { id: "remote", label: "Remote" },
   { id: "hybrid", label: "Hybrid" },
-  { id: "onsite", label: "Site" },
+  { id: "onsite", label: "On-site" },
 ] as const;
 
 export function DiscoverView({ initial }: { initial: JobsResponse }) {
@@ -39,26 +40,26 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
 
   return (
     <div>
-      <header className="mb-7 flex items-end justify-between">
-        <h1 className="text-[28px] font-medium leading-none tracking-[-0.04em] text-ivory">
-          Roles
-        </h1>
-        <p className="text-[13px] text-ash">
-          {listings.length}
-          {initial.hidden ? ` · ${initial.hidden} out` : ""}
-        </p>
-      </header>
+      <PageHeader
+        title="Roles"
+        meta={
+          <>
+            {listings.length}
+            {initial.hidden ? ` · ${initial.hidden} out` : ""}
+          </>
+        }
+      />
 
-      <label className="hairline-x mb-5 flex min-h-11 items-center gap-3 pb-2">
+      <label className="field mb-4">
         <span className="text-ash">
           <IconSearch />
         </span>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search"
+          placeholder="Search title or company"
           aria-label="Search roles"
-          className="w-full bg-transparent text-[16px] font-normal tracking-[-0.02em] text-ivory outline-none placeholder:text-ash"
+          className="w-full bg-transparent text-[16px] font-normal tracking-[-0.015em] text-ivory outline-none placeholder:text-ash"
         />
         {query ? (
           <button
@@ -72,7 +73,7 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
         ) : null}
       </label>
 
-      <div className="segment mb-3" role="tablist" aria-label="Work mode">
+      <div className="segment mb-4" role="tablist" aria-label="Work mode">
         {FILTERS.map((filter) => (
           <button
             key={filter.id}
@@ -80,9 +81,7 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
             role="tab"
             aria-selected={workMode === filter.id}
             onClick={() => setWorkMode(filter.id)}
-            className={`min-h-8 text-[12px] tracking-[-0.01em] ${
-              workMode === filter.id ? "text-ivory" : "text-ash"
-            }`}
+            className="text-[13px] tracking-[-0.015em]"
           >
             {filter.label}
           </button>
@@ -90,7 +89,7 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
       </div>
 
       {platforms.length > 1 ? (
-        <div className="no-scrollbar mb-6 flex gap-4 overflow-x-auto text-[13px]">
+        <div className="no-scrollbar mb-5 flex gap-5 overflow-x-auto text-[13px]">
           <button
             type="button"
             onClick={() => setPlatformId("all")}
@@ -112,20 +111,20 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
           ))}
         </div>
       ) : (
-        <div className="mb-4" />
+        <div className="mb-2" />
       )}
 
       {listings.length === 0 ? (
         <EmptyState
-          title={filtered ? "Nothing matches." : "The board is empty."}
+          title={filtered ? "No matches" : "No roles yet"}
           body={
             filtered
-              ? "Clear the filter, or pulse another board."
-              : "Pulse a public API. Listings are never invented."
+              ? "Clear search or try another filter."
+              : "Run a pulse to load jobs from a public board."
           }
           action={
-            <Link href="/pulse" className="pressable text-[14px] text-ivory">
-              Open Pulse
+            <Link href="/pulse" className="ghost pressable text-ivory">
+              Go to Pulse
             </Link>
           }
         />

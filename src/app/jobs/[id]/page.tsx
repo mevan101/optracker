@@ -37,10 +37,10 @@ export default async function JobPage({
   if (!listing) {
     return (
       <EmptyState
-        title="This role is gone."
+        title="This role is gone"
         body="It is missing, expired, or was filtered out."
         action={
-          <Link href="/" className="pressable text-[14px] text-ivory">
+          <Link href="/" className="ghost pressable text-ivory">
             Back to Roles
           </Link>
         }

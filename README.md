@@ -7,8 +7,8 @@ The previous repository was an empty stub. This rebuild adds the product archite
 ## Design
 
 - Editorial luxury on obsidian `#09090b`
-- Hairline lists, almost no cards or chips
-- Inter + SF Pro, tracking `-0.02em`
+- Newsreader for titles, Inter for UI
+- Hairline lists, real search/segment controls, almost no cards or chips
 - Tuned for iPhone 16 Pro at 402 CSS pixels, including `safe-area-inset-top`
 
 ## Scripts

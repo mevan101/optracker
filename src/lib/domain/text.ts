@@ -80,13 +80,23 @@ export function parseDate(value: unknown): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+const WORK_MODE_LABEL: Record<string, string> = {
+  remote: "Remote",
+  hybrid: "Hybrid",
+  onsite: "On-site",
+};
+
+export function workModeLabel(mode: string): string | null {
+  return WORK_MODE_LABEL[mode] ?? null;
+}
+
 export function formatRelative(iso: string | null, now = new Date()): string {
   if (!iso) {
-    return "Date unknown";
+    return "—";
   }
   const then = Date.parse(iso);
   if (Number.isNaN(then)) {
-    return "Date unknown";
+    return "—";
   }
   const delta = now.getTime() - then;
   const minutes = Math.round(delta / 60_000);

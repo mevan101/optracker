@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 
@@ -12,13 +12,20 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500"],
+  variable: "--font-newsreader",
+});
+
 export const metadata: Metadata = {
   title: {
     default: "OpTracker",
     template: "%s · OpTracker",
   },
   description:
-    "A quiet job-platform viewer. Live roles from public APIs, with expired, broken, mock, and placeholder listings removed.",
+    "Live roles from public job-board APIs. Expired, broken, mock, and placeholder listings are removed.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -39,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${newsreader.variable}`}>
       <body className={`${inter.className} min-h-dvh bg-obsidian antialiased`}>
         <AppShell>{children}</AppShell>
       </body>

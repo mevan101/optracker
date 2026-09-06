@@ -3,9 +3,21 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { IconArrowLeft, IconBookmark } from "@/components/icons";
-import { formatRelative } from "@/lib/domain/text";
+import { formatRelative, workModeLabel } from "@/lib/domain/text";
 import { readSavedIds, toggleSaved } from "@/lib/client/saved";
 import type { JobListing } from "@/lib/domain/types";
+
+function Fact({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) {
+    return null;
+  }
+  return (
+    <div className="hairline-x grid grid-cols-[6.25rem_1fr] gap-4 py-3">
+      <dt className="text-[13px] text-ash">{label}</dt>
+      <dd className="text-[13px] text-ivory">{value}</dd>
+    </div>
+  );
+}
 
 export function JobDetail({ listing }: { listing: JobListing }) {
   const [saved, setSaved] = useState(false);
@@ -16,7 +28,7 @@ export function JobDetail({ listing }: { listing: JobListing }) {
 
   return (
     <div>
-      <div className="mb-10 flex items-center justify-between">
+      <div className="mb-9 flex items-center justify-between">
         <Link href="/" className="pressable flex items-center gap-1.5 text-[14px] text-ash">
           <IconArrowLeft />
           Roles
@@ -35,41 +47,32 @@ export function JobDetail({ listing }: { listing: JobListing }) {
         </button>
       </div>
 
-      <p className="text-[13px] text-ash">{listing.company}</p>
-      <h1 className="mt-2 text-[32px] font-medium leading-[1.05] tracking-[-0.045em] text-ivory">
+      <p className="text-[14px] text-mist">{listing.company}</p>
+      <h1 className="mt-2 font-display text-[34px] font-normal leading-[1.08] tracking-[-0.03em] text-ivory">
         {listing.title}
       </h1>
-      <p className="mt-4 text-[14px] leading-6 text-ash">
-        {listing.location}
-        <span> · </span>
-        <span className="capitalize">{listing.workMode}</span>
-        {listing.salary ? (
-          <>
-            <span> · </span>
-            {listing.salary}
-          </>
-        ) : null}
-        <span> · </span>
-        {listing.platformName}
-        <span> · </span>
-        {formatRelative(listing.postedAt)}
-      </p>
 
-      <p className="mt-10 text-[16px] leading-7 tracking-[-0.018em] text-ivory/88">
-        {listing.excerpt || "The source did not provide a usable excerpt."}
+      <dl className="mt-8">
+        <Fact label="Location" value={listing.location} />
+        <Fact label="Mode" value={workModeLabel(listing.workMode)} />
+        <Fact label="Salary" value={listing.salary} />
+        <Fact label="Board" value={listing.platformName} />
+        <Fact label="Posted" value={formatRelative(listing.postedAt)} />
+      </dl>
+
+      <p className="mt-8 text-[16px] leading-7 tracking-[-0.012em] text-ivory/90">
+        {listing.excerpt || "This listing did not include a usable excerpt."}
       </p>
 
       <a
         href={listing.url}
         target="_blank"
         rel="noreferrer"
-        className="pressable hairline-t mt-12 block pt-4 text-[15px] font-medium tracking-[-0.02em] text-ivory"
+        className="solid pressable mt-10"
       >
         Open on {listing.platformName}
       </a>
-      <p className="mt-3 text-[12px] leading-5 text-ash">
-        Apply on the original board. OpTracker does not invent copy.
-      </p>
+      <p className="mt-3 text-[12px] leading-5 text-ash">Opens the original listing.</p>
     </div>
   );
 }

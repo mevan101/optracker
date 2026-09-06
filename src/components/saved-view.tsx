@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { readSavedIds } from "@/lib/client/saved";
 import { JobCard } from "@/components/job-card";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/states";
 import type { JobListing } from "@/lib/domain/types";
 
@@ -24,25 +25,20 @@ export function SavedView({ listings }: { listings: JobListing[] }) {
 
   return (
     <div>
-      <header className="mb-8 flex items-end justify-between">
-        <h1 className="text-[28px] font-medium leading-none tracking-[-0.04em] text-ivory">
-          Saved
-        </h1>
-        {ids ? <p className="text-[13px] text-ash">{saved.length}</p> : null}
-      </header>
+      <PageHeader title="Saved" meta={ids ? saved.length : undefined} />
 
       {ids === null ? (
-        <div className="hairline-x min-h-[76px]" />
+        <div className="hairline-x min-h-[88px]" />
       ) : saved.length === 0 ? (
         <EmptyState
-          title={ids.length ? "Those roles are gone." : "Nothing saved."}
+          title={ids.length ? "Those listings are gone" : "No saved roles"}
           body={
             ids.length
-              ? "Bookmarks only stay if the listing still passes integrity."
-              : "Save a live role from the board."
+              ? "A bookmark stays only while the listing still passes integrity."
+              : "Save a live role from the list."
           }
           action={
-            <Link href="/" className="pressable text-[14px] text-ivory">
+            <Link href="/" className="ghost pressable text-ivory">
               Back to Roles
             </Link>
           }

@@ -10,8 +10,8 @@ export default function ErrorView({
 }) {
   return (
     <ErrorState
-      title="Could not render."
-      body="Try again. Nothing was invented to fill the gap."
+      title="Could not render"
+      body="Try again. The board was left as-is."
       onRetry={reset}
     />
   );

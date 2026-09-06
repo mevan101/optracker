@@ -8,6 +8,7 @@ import {
   pulsePlatform,
   type PlatformRow,
 } from "@/lib/client/api";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState } from "@/components/states";
 import type { CrawlBudget, IntegrityStats } from "@/lib/domain/types";
 
@@ -33,7 +34,7 @@ export function PulseView({
       setPlatforms(payload.platforms);
       setBudget(payload.budget);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Pulse status unavailable.");
+      setError(err instanceof Error ? err.message : "Pulse status is unavailable.");
     }
   }
 
@@ -51,12 +52,12 @@ export function PulseView({
           `${result.attempt.stats.accepted} kept. ${formatIntegrity(result.attempt.stats)}.`,
         );
       } else {
-        setMessage(result.attempt?.error ?? "The source did not return a usable feed.");
+        setMessage(result.attempt?.error ?? "That source did not return a usable feed.");
       }
       await refresh();
       router.refresh();
     } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : "Pulse refused.");
+      setMessage(err instanceof Error ? err.message : "Pulse was refused.");
     } finally {
       setBusyId(null);
     }
@@ -67,32 +68,28 @@ export function PulseView({
 
   return (
     <div>
-      <header className="mb-10">
-        <h1 className="text-[28px] font-medium leading-none tracking-[-0.04em] text-ivory">
-          Pulse
-        </h1>
-      </header>
+      <PageHeader title="Pulse" />
 
       {error ? <ErrorState body={error} onRetry={() => void refresh()} /> : null}
 
       <section className="mb-10">
         <p className="text-[13px] text-ash">Remaining today</p>
-        <div className="mt-2 flex items-baseline gap-2">
-          <p className="text-[72px] font-medium leading-none tracking-[-0.05em] text-ivory">
+        <div className="mt-3 flex items-baseline gap-2">
+          <p className="font-display text-[80px] font-normal leading-none tracking-[-0.04em] text-ivory">
             {budget.remaining}
           </p>
-          <p className="text-[15px] text-ash">/ {budget.limit}</p>
+          <p className="text-[15px] tabular-nums text-ash">/ {budget.limit}</p>
         </div>
-        <div className="mt-6 h-px overflow-hidden bg-white/[0.06]">
+        <div className="mt-6 h-px overflow-hidden bg-white/[0.08]">
           <div
             className="meter h-full bg-ivory"
             style={{ transform: `scaleX(${remainingRatio})` }}
           />
         </div>
-        <p className="mt-3 text-[12px] text-ash">{budget.date} UTC</p>
+        <p className="mt-3 text-[12px] tabular-nums text-ash">{budget.date} UTC</p>
       </section>
 
-      {message ? <p className="mb-6 text-[13px] leading-6 text-ash">{message}</p> : null}
+      {message ? <p className="mb-6 text-[13px] leading-6 text-mist">{message}</p> : null}
 
       {lastStats ? (
         <p className="mb-8 text-[13px] leading-6 text-ash">
@@ -103,28 +100,30 @@ export function PulseView({
       ) : null}
 
       {crawlable.length === 0 ? (
-        <EmptyState title="No sources." body="No public API adapters are registered." />
+        <EmptyState title="No sources" body="No public API adapters are registered." />
       ) : (
         <div>
           {crawlable.map((platform) => (
             <div
               key={platform.id}
-              className="hairline-x flex items-center justify-between gap-4 py-4"
+              className="hairline-x flex items-center justify-between gap-4 py-[18px]"
             >
               <div className="min-w-0">
-                <h2 className="text-[16px] font-medium tracking-[-0.03em] text-ivory">
+                <h2 className="text-[16.5px] font-medium tracking-[-0.025em] text-ivory">
                   {platform.name}
                 </h2>
-                <p className="mt-1 text-[13px] text-ash">{platform.liveCount} live</p>
+                <p className="mt-1 text-[13px] tabular-nums text-ash">
+                  {platform.liveCount} live
+                </p>
               </div>
               <button
                 type="button"
                 disabled={busyId !== null || budget.remaining < 1}
                 onClick={() => void runPulse(platform.id)}
                 aria-label={`Pulse ${platform.name}`}
-                className="pressable text-[14px] text-ivory disabled:text-ash"
+                className="ghost pressable text-ivory"
               >
-                {busyId === platform.id ? "Working" : "Pulse"}
+                {busyId === platform.id ? "Working…" : "Pulse"}
               </button>
             </div>
           ))}

@@ -2,9 +2,10 @@ export function SkeletonList({ count = 6 }: { count?: number }) {
   return (
     <div>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="hairline-x py-3.5">
+        <div key={index} className="hairline-x py-[18px]">
           <div className="skeleton h-3.5 w-2/3 rounded-sm" />
-          <div className="skeleton mt-2 h-3 w-2/5 rounded-sm" />
+          <div className="skeleton mt-2.5 h-3 w-2/5 rounded-sm" />
+          <div className="skeleton mt-2 h-2.5 w-1/3 rounded-sm" />
         </div>
       ))}
     </div>
@@ -21,16 +22,18 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="pt-8">
-      <h2 className="text-[20px] font-medium tracking-[-0.03em] text-ivory">{title}</h2>
-      <p className="mt-2 max-w-[280px] text-[14px] leading-6 text-ash">{body}</p>
-      {action ? <div className="mt-5">{action}</div> : null}
+    <div className="pt-10">
+      <h2 className="font-display text-[26px] font-normal tracking-[-0.025em] text-ivory">
+        {title}
+      </h2>
+      <p className="mt-3 max-w-[280px] text-[14px] leading-6 text-ash">{body}</p>
+      {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );
 }
 
 export function ErrorState({
-  title = "Unavailable.",
+  title = "Unavailable",
   body,
   onRetry,
 }: {
@@ -39,15 +42,13 @@ export function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <div className="pt-8">
-      <h2 className="text-[20px] font-medium tracking-[-0.03em] text-ivory">{title}</h2>
-      <p className="mt-2 max-w-[280px] text-[14px] leading-6 text-ash">{body}</p>
+    <div className="pt-10">
+      <h2 className="font-display text-[26px] font-normal tracking-[-0.025em] text-ivory">
+        {title}
+      </h2>
+      <p className="mt-3 max-w-[280px] text-[14px] leading-6 text-ash">{body}</p>
       {onRetry ? (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="pressable mt-5 text-[14px] text-ivory"
-        >
+        <button type="button" onClick={onRetry} className="ghost pressable mt-6 text-ivory">
           Try again
         </button>
       ) : null}

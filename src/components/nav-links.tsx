@@ -16,7 +16,7 @@ export function SideNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="mt-12 space-y-4" aria-label="Primary">
+    <nav className="mt-14 space-y-5" aria-label="Primary">
       {NAV.map((item) => {
         const active = isActivePath(pathname, item.href);
         return (
@@ -26,7 +26,7 @@ export function SideNav() {
             prefetch
             data-active={active}
             aria-current={active ? "page" : undefined}
-            className={`nav-item block text-[15px] tracking-[-0.02em] ${
+            className={`nav-item block text-[16px] tracking-[-0.02em] ${
               active ? "text-ivory" : "text-ash"
             }`}
           >
@@ -43,7 +43,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="bottom-safe glass hairline-t fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[402px] px-2 pt-1.5 lg:hidden"
+      className="bottom-safe glass hairline-t fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[402px] px-1 pt-2 lg:hidden"
       aria-label="Primary"
     >
       <div className="grid grid-cols-4">
@@ -56,7 +56,7 @@ export function BottomNav() {
               prefetch
               data-active={active}
               aria-current={active ? "page" : undefined}
-              className="nav-item flex min-h-11 flex-col items-center justify-center gap-0.5 text-[9px] tracking-[0.04em] text-ivory"
+              className="nav-item flex min-h-12 flex-col items-center justify-center gap-1 text-[11px] tracking-[-0.01em] text-ivory"
             >
               <item.icon size={20} />
               {item.label}
