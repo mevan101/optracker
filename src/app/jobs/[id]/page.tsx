@@ -6,6 +6,7 @@ import { readCatalog } from "@/lib/store/persistence";
 import { EmptyState } from "@/components/states";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function listingFromParam(id: string) {
   const decoded = decodeURIComponent(id);

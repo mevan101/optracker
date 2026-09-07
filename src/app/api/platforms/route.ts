@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { JOB_PLATFORMS } from "@/lib/domain/platforms";
 import { presentCatalog } from "@/lib/crawl/orchestrator";
+import { jsonNoStore } from "@/lib/http/no-store";
 import { readCatalog } from "@/lib/store/persistence";
 
 export const runtime = "nodejs";
@@ -13,7 +13,7 @@ export function GET() {
     counts.set(listing.platformId, (counts.get(listing.platformId) ?? 0) + 1);
   }
 
-  return NextResponse.json({
+  return jsonNoStore({
     platforms: JOB_PLATFORMS.map((platform) => ({
       ...platform,
       liveCount: counts.get(platform.id) ?? 0,

@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
   CrawlBudgetError,
@@ -7,6 +6,7 @@ import {
 } from "@/lib/crawl/orchestrator";
 import { resolveBudget } from "@/lib/crawl/budget";
 import { getCrawlablePlatforms } from "@/lib/domain/platforms";
+import { jsonNoStore } from "@/lib/http/no-store";
 import { readCatalog } from "@/lib/store/persistence";
 
 export const runtime = "nodejs";
@@ -18,7 +18,7 @@ const bodySchema = z.object({
 
 export function GET() {
   const snapshot = readCatalog();
-  return NextResponse.json({
+  return jsonNoStore({
     budget: resolveBudget(snapshot),
     lastAttempts: snapshot.lastAttempts,
     updatedAt: snapshot.updatedAt,
@@ -33,11 +33,11 @@ export async function POST(request: Request) {
     const json = await request.json().catch(() => ({}));
     const parsed = bodySchema.safeParse(json);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid crawl request." }, { status: 400 });
+      return jsonNoStore({ error: "Invalid crawl request." }, 400);
     }
     platformId = parsed.data.platformId;
   } catch {
-    return NextResponse.json({ error: "Invalid crawl request." }, { status: 400 });
+    return jsonNoStore({ error: "Invalid crawl request." }, 400);
   }
 
   if (!platformId) {
@@ -51,9 +51,9 @@ export async function POST(request: Request) {
     }) ?? getCrawlablePlatforms()[0];
 
     if (!next || budget.remaining < 1) {
-      return NextResponse.json(
+      return jsonNoStore(
         { error: "Daily crawl limit reached (5 per UTC day).", budget },
-        { status: 429 },
+        429,
       );
     }
     platformId = next.id;
@@ -61,20 +61,20 @@ export async function POST(request: Request) {
 
   try {
     const result = await crawlPlatform({ platformId });
-    return NextResponse.json(result);
+    return jsonNoStore(result);
   } catch (error) {
     if (error instanceof CrawlBudgetError) {
-      return NextResponse.json(
+      return jsonNoStore(
         { error: error.message, budget: resolveBudget(readCatalog()) },
-        { status: 429 },
+        429,
       );
     }
     if (error instanceof CrawlSourceError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return jsonNoStore({ error: error.message }, 400);
     }
-    return NextResponse.json(
+    return jsonNoStore(
       { error: "Crawl failed unexpectedly. No listings were invented." },
-      { status: 500 },
+      500,
     );
   }
 }

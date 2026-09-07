@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   fetchPlatforms,
@@ -8,6 +9,7 @@ import {
   pulsePlatform,
   type PlatformRow,
 } from "@/lib/client/api";
+import { emitCatalogChanged } from "@/lib/client/catalog-sync";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState } from "@/components/states";
 import type { CrawlBudget, IntegrityStats } from "@/lib/domain/types";
@@ -25,7 +27,13 @@ export function PulseView({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastStats, setLastStats] = useState<IntegrityStats | null>(null);
+  const [acceptedNow, setAcceptedNow] = useState(0);
   const router = useRouter();
+
+  useEffect(() => {
+    setPlatforms(initialPlatforms);
+    setBudget(initialBudget);
+  }, [initialPlatforms, initialBudget]);
 
   async function refresh() {
     setError(null);
@@ -46,7 +54,17 @@ export function PulseView({
       if (result.budget) {
         setBudget(result.budget);
       }
+      if (result.listings) {
+        setPlatforms((current) =>
+          current.map((platform) => ({
+            ...platform,
+            liveCount: result.listings!.filter((listing) => listing.platformId === platform.id)
+              .length,
+          })),
+        );
+      }
       setLastStats(result.attempt?.stats ?? null);
+      setAcceptedNow(result.attempt?.stats.accepted ?? 0);
       if (result.attempt?.ok) {
         setMessage(
           `${result.attempt.stats.accepted} kept. ${formatIntegrity(result.attempt.stats)}.`,
@@ -54,6 +72,7 @@ export function PulseView({
       } else {
         setMessage(result.attempt?.error ?? "That source did not return a usable feed.");
       }
+      emitCatalogChanged();
       await refresh();
       router.refresh();
     } catch (err: unknown) {
@@ -92,10 +111,18 @@ export function PulseView({
       {message ? <p className="mb-6 text-[13px] leading-6 text-mist">{message}</p> : null}
 
       {lastStats ? (
-        <p className="mb-8 text-[13px] leading-6 text-ash">
+        <p className="mb-4 text-[13px] leading-6 text-ash">
           {lastStats.accepted} kept · {lastStats.expired} expired ·{" "}
           {lastStats.broken + lastStats.invalid} broken · {lastStats.mock + lastStats.placeholder}{" "}
           mock
+        </p>
+      ) : null}
+
+      {acceptedNow > 0 ? (
+        <p className="mb-8">
+          <Link href="/" className="pressable text-[14px] text-ivory">
+            View live roles
+          </Link>
         </p>
       ) : null}
 

@@ -1,17 +1,22 @@
+"use client";
+
 import { EmptyState } from "@/components/states";
 import { PageHeader } from "@/components/page-header";
 import type { PlatformRow } from "@/lib/client/api";
+import { useLivePlatforms } from "@/lib/client/use-live-catalog";
 
 export function PlatformsView({ platforms }: { platforms: PlatformRow[] }) {
+  const live = useLivePlatforms(platforms);
+
   return (
     <div>
-      <PageHeader title="Boards" meta={platforms.length} />
+      <PageHeader title="Boards" meta={live.length} />
 
-      {platforms.length === 0 ? (
+      {live.length === 0 ? (
         <EmptyState title="No boards" body="The curated catalog is empty." />
       ) : (
         <div className="card-list">
-          {platforms.map((platform) => (
+          {live.map((platform) => (
             <a
               key={platform.id}
               href={platform.homeUrl}

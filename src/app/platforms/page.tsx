@@ -5,6 +5,7 @@ import { presentCatalog } from "@/lib/crawl/orchestrator";
 import { readCatalog } from "@/lib/store/persistence";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 export const metadata: Metadata = { title: "Boards" };
 
 export default function PlatformsPage() {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { filterListings } from "@/lib/client/filter-listings";
 import type { JobsResponse } from "@/lib/client/api";
+import { useLiveJobs } from "@/lib/client/use-live-catalog";
 import { IconClose, IconSearch } from "@/components/icons";
 import { JobCard } from "@/components/job-card";
 import { PageHeader } from "@/components/page-header";
@@ -17,23 +18,24 @@ const FILTERS = [
 ] as const;
 
 export function DiscoverView({ initial }: { initial: JobsResponse }) {
+  const catalog = useLiveJobs(initial);
   const [query, setQuery] = useState("");
   const [workMode, setWorkMode] = useState("all");
   const [platformId, setPlatformId] = useState("all");
 
   const platforms = useMemo(() => {
     const seen = new Map<string, string>();
-    for (const listing of initial.listings) {
+    for (const listing of catalog.listings) {
       if (!seen.has(listing.platformId)) {
         seen.set(listing.platformId, listing.platformName);
       }
     }
     return [...seen.entries()].map(([id, name]) => ({ id, name }));
-  }, [initial.listings]);
+  }, [catalog.listings]);
 
   const listings = useMemo(
-    () => filterListings(initial.listings, query, workMode, platformId),
-    [initial.listings, query, workMode, platformId],
+    () => filterListings(catalog.listings, query, workMode, platformId),
+    [catalog.listings, query, workMode, platformId],
   );
 
   const filtered = Boolean(query.trim() || workMode !== "all" || platformId !== "all");
@@ -45,7 +47,7 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
         meta={
           <>
             {listings.length}
-            {initial.hidden ? ` · ${initial.hidden} out` : ""}
+            {catalog.hidden ? ` · ${catalog.hidden} out` : ""}
           </>
         }
       />

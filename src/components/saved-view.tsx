@@ -2,17 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { readSavedIds } from "@/lib/client/saved";
+import { onSavedChanged, readSavedIds } from "@/lib/client/saved";
+import { useLiveListings } from "@/lib/client/use-live-catalog";
 import { JobCard } from "@/components/job-card";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/states";
 import type { JobListing } from "@/lib/domain/types";
 
 export function SavedView({ listings }: { listings: JobListing[] }) {
+  const liveListings = useLiveListings(listings);
   const [ids, setIds] = useState<string[] | null>(null);
 
   useEffect(() => {
-    setIds(readSavedIds());
+    const sync = () => setIds(readSavedIds());
+    sync();
+    return onSavedChanged(sync);
   }, []);
 
   const saved = useMemo(() => {
@@ -20,8 +24,8 @@ export function SavedView({ listings }: { listings: JobListing[] }) {
       return [];
     }
     const set = new Set(ids);
-    return listings.filter((listing) => set.has(listing.id));
-  }, [ids, listings]);
+    return liveListings.filter((listing) => set.has(listing.id));
+  }, [ids, liveListings]);
 
   return (
     <div>

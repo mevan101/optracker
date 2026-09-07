@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { presentCatalog } from "@/lib/crawl/orchestrator";
+import { jsonNoStore } from "@/lib/http/no-store";
 import { readCatalog } from "@/lib/store/persistence";
 
 export const runtime = "nodejs";
@@ -27,7 +27,7 @@ export function GET(request: Request) {
     return haystack.includes(query);
   });
 
-  return NextResponse.json({
+  return jsonNoStore({
     listings,
     total: listings.length,
     hidden: presented.hidden,
