@@ -61,6 +61,12 @@ describe("PulseView", () => {
 
     render(<PulseView initialPlatforms={samplePlatforms} initialBudget={sampleBudget} />);
     expect(screen.getByText("4")).toBeTruthy();
+    expect(
+      screen.getByText(/Each pulse fetches a public JSON feed/),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "See Jobicy on Roles" }).getAttribute("href")).toBe(
+      "/?board=jobicy",
+    );
 
     await user.click(screen.getByRole("button", { name: "Pulse Remotive" }));
 

@@ -108,7 +108,16 @@ export function PulseView({
 
   const crawlable = platforms.filter((platform) => platform.crawlable);
   const remainingRatio = budget.remaining / budget.limit;
-  const pulsedName = platforms.find((platform) => platform.id === lastPulseId)?.name;
+  const latestPulse = [...crawlable]
+    .filter(
+      (platform) => platform.lastAttempt?.ok && (platform.lastAttempt.accepted ?? 0) > 0,
+    )
+    .sort(
+      (a, b) => Date.parse(b.lastAttempt!.at) - Date.parse(a.lastAttempt!.at),
+    )[0];
+  const ctaId = lastPulseId ?? latestPulse?.id ?? null;
+  const ctaName = platforms.find((platform) => platform.id === ctaId)?.name;
+  const showBoardLink = Boolean(ctaId && (acceptedNow > 0 || latestPulse));
 
   return (
     <div>
@@ -147,10 +156,10 @@ export function PulseView({
         </p>
       ) : null}
 
-      {acceptedNow > 0 && lastPulseId ? (
+      {showBoardLink && ctaId ? (
         <p className="mb-8">
-          <Link href={`/?board=${encodeURIComponent(lastPulseId)}`} className="pressable text-[14px] text-ivory">
-            {pulsedName ? `See ${pulsedName} on Roles` : "View live roles"}
+          <Link href={`/?board=${encodeURIComponent(ctaId)}`} className="pressable text-[14px] text-ivory">
+            {ctaName ? `See ${ctaName} on Roles` : "View live roles"}
           </Link>
         </p>
       ) : null}
