@@ -5,4 +5,7 @@ afterEach(() => {
   if (typeof document !== "undefined") {
     cleanup();
   }
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.clear();
+  }
 });

@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import {
   fetchPlatforms,
   formatIntegrity,
+  jobsFromCrawl,
   pulsePlatform,
   type PlatformRow,
 } from "@/lib/client/api";
-import { emitCatalogChanged } from "@/lib/client/catalog-sync";
+import { onCatalogChanged, publishJobsSnapshot } from "@/lib/client/catalog-sync";
+import { formatRelative } from "@/lib/domain/text";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState } from "@/components/states";
 import type { CrawlBudget, IntegrityStats } from "@/lib/domain/types";
@@ -27,13 +29,9 @@ export function PulseView({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastStats, setLastStats] = useState<IntegrityStats | null>(null);
+  const [lastPulseId, setLastPulseId] = useState<string | null>(null);
   const [acceptedNow, setAcceptedNow] = useState(0);
   const router = useRouter();
-
-  useEffect(() => {
-    setPlatforms(initialPlatforms);
-    setBudget(initialBudget);
-  }, [initialPlatforms, initialBudget]);
 
   async function refresh() {
     setError(null);
@@ -46,6 +44,12 @@ export function PulseView({
     }
   }
 
+  useEffect(() => {
+    return onCatalogChanged(() => {
+      void refresh();
+    });
+  }, []);
+
   async function runPulse(platformId: string) {
     setBusyId(platformId);
     setMessage(null);
@@ -54,25 +58,45 @@ export function PulseView({
       if (result.budget) {
         setBudget(result.budget);
       }
-      if (result.listings) {
+      const snapshot = jobsFromCrawl(result);
+      if (snapshot) {
+        publishJobsSnapshot(snapshot);
+      }
+      const attempt = result.attempt;
+      if (attempt) {
         setPlatforms((current) =>
-          current.map((platform) => ({
-            ...platform,
-            liveCount: result.listings!.filter((listing) => listing.platformId === platform.id)
-              .length,
-          })),
+          current.map((platform) => {
+            if (platform.id !== attempt.platformId) {
+              return platform;
+            }
+            return {
+              ...platform,
+              liveCount:
+                result.listings?.filter((listing) => listing.platformId === platform.id).length ??
+                attempt.stats.accepted,
+              lastAttempt: {
+                at: attempt.finishedAt,
+                ok: attempt.ok,
+                accepted: attempt.stats.accepted,
+                error: attempt.error,
+              },
+            };
+          }),
         );
       }
-      setLastStats(result.attempt?.stats ?? null);
-      setAcceptedNow(result.attempt?.stats.accepted ?? 0);
-      if (result.attempt?.ok) {
+      setLastPulseId(attempt?.platformId ?? platformId);
+      setLastStats(attempt?.stats ?? null);
+      setAcceptedNow(attempt?.stats.accepted ?? 0);
+      const name =
+        platforms.find((platform) => platform.id === (attempt?.platformId ?? platformId))?.name ??
+        "that source";
+      if (attempt?.ok) {
         setMessage(
-          `${result.attempt.stats.accepted} kept. ${formatIntegrity(result.attempt.stats)}.`,
+          `${attempt.stats.accepted} ${name} roles are on the board. ${formatIntegrity(attempt.stats)}.`,
         );
       } else {
-        setMessage(result.attempt?.error ?? "That source did not return a usable feed.");
+        setMessage(attempt?.error ?? "That JSON feed did not return a usable payload.");
       }
-      emitCatalogChanged();
       await refresh();
       router.refresh();
     } catch (err: unknown) {
@@ -84,6 +108,7 @@ export function PulseView({
 
   const crawlable = platforms.filter((platform) => platform.crawlable);
   const remainingRatio = budget.remaining / budget.limit;
+  const pulsedName = platforms.find((platform) => platform.id === lastPulseId)?.name;
 
   return (
     <div>
@@ -105,6 +130,10 @@ export function PulseView({
             style={{ transform: `scaleX(${remainingRatio})` }}
           />
         </div>
+        <p className="mt-4 max-w-[34ch] text-[13px] leading-6 text-ash">
+          Each pulse fetches a public JSON feed. LinkedIn, Indeed, and the other HTML boards stay
+          as links — they are not scraped.
+        </p>
         <p className="mt-3 text-[12px] tabular-nums text-ash">{budget.date} UTC</p>
       </section>
 
@@ -118,16 +147,16 @@ export function PulseView({
         </p>
       ) : null}
 
-      {acceptedNow > 0 ? (
+      {acceptedNow > 0 && lastPulseId ? (
         <p className="mb-8">
-          <Link href="/" className="pressable text-[14px] text-ivory">
-            View live roles
+          <Link href={`/?board=${encodeURIComponent(lastPulseId)}`} className="pressable text-[14px] text-ivory">
+            {pulsedName ? `See ${pulsedName} on Roles` : "View live roles"}
           </Link>
         </p>
       ) : null}
 
       {crawlable.length === 0 ? (
-        <EmptyState title="No sources" body="No public API adapters are registered." />
+        <EmptyState title="No sources" body="No public JSON adapters are registered." />
       ) : (
         <div>
           {crawlable.map((platform) => (
@@ -139,8 +168,14 @@ export function PulseView({
                 <h2 className="text-[16.5px] font-medium tracking-[-0.025em] text-ivory">
                   {platform.name}
                 </h2>
-                <p className="mt-1 text-[13px] tabular-nums text-ash">
-                  {platform.liveCount} live
+                <p className="mt-1 text-[13px] text-ash">
+                  <span className="tabular-nums">{platform.liveCount} live</span>
+                  <span className="text-ash/70"> · </span>
+                  {platform.lastAttempt
+                    ? platform.lastAttempt.ok
+                      ? formatRelative(platform.lastAttempt.at)
+                      : platform.lastAttempt.error ?? "Failed"
+                    : "Not pulsed"}
                 </p>
               </div>
               <button

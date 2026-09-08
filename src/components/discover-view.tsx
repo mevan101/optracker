@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { filterListings } from "@/lib/client/filter-listings";
-import type { JobsResponse } from "@/lib/client/api";
+import { jobsFromCrawl, pulsePlatform, type JobsResponse } from "@/lib/client/api";
+import { publishJobsSnapshot } from "@/lib/client/catalog-sync";
 import { useLiveJobs } from "@/lib/client/use-live-catalog";
+import { formatRelative } from "@/lib/domain/text";
 import { IconClose, IconSearch } from "@/components/icons";
 import { JobCard } from "@/components/job-card";
 import { PageHeader } from "@/components/page-header";
@@ -17,11 +19,25 @@ const FILTERS = [
   { id: "onsite", label: "On-site" },
 ] as const;
 
-export function DiscoverView({ initial }: { initial: JobsResponse }) {
+export function DiscoverView({
+  initial,
+  focusBoard,
+}: {
+  initial: JobsResponse;
+  focusBoard?: string;
+}) {
   const catalog = useLiveJobs(initial);
   const [query, setQuery] = useState("");
   const [workMode, setWorkMode] = useState("all");
-  const [platformId, setPlatformId] = useState("all");
+  const [platformId, setPlatformId] = useState(focusBoard || "all");
+  const [loadingPulse, setLoadingPulse] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (focusBoard) {
+      setPlatformId(focusBoard);
+    }
+  }, [focusBoard]);
 
   const platforms = useMemo(() => {
     const seen = new Map<string, string>();
@@ -40,6 +56,28 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
 
   const filtered = Boolean(query.trim() || workMode !== "all" || platformId !== "all");
 
+  async function loadJobs() {
+    setLoadingPulse(true);
+    setLoadError(null);
+    try {
+      const result = await pulsePlatform();
+      const snapshot = jobsFromCrawl(result);
+      if (snapshot) {
+        publishJobsSnapshot(snapshot);
+      }
+      if (result.attempt?.ok && result.attempt.platformId) {
+        setPlatformId(result.attempt.platformId);
+      }
+      if (result.attempt && !result.attempt.ok) {
+        setLoadError(result.attempt.error ?? "That JSON feed did not return a usable payload.");
+      }
+    } catch (err: unknown) {
+      setLoadError(err instanceof Error ? err.message : "Pulse was refused.");
+    } finally {
+      setLoadingPulse(false);
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -48,6 +86,7 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
           <>
             {listings.length}
             {catalog.hidden ? ` · ${catalog.hidden} out` : ""}
+            {catalog.updatedAt ? ` · ${formatRelative(catalog.updatedAt)}` : ""}
           </>
         }
       />
@@ -122,12 +161,23 @@ export function DiscoverView({ initial }: { initial: JobsResponse }) {
           body={
             filtered
               ? "Clear search or try another filter."
-              : "Run a pulse to load jobs from a public board."
+              : loadError ?? "Load jobs from a public JSON board. This uses one of today's five pulses."
           }
           action={
-            <Link href="/pulse" className="ghost pressable text-ivory">
-              Go to Pulse
-            </Link>
+            filtered ? (
+              <Link href="/pulse" className="ghost pressable text-ivory">
+                Go to Pulse
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void loadJobs()}
+                disabled={loadingPulse || catalog.budget.remaining < 1}
+                className="ghost pressable text-ivory disabled:text-ash"
+              >
+                {loadingPulse ? "Loading…" : "Load jobs"}
+              </button>
+            )
           }
         />
       ) : (

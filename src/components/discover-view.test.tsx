@@ -20,6 +20,7 @@ function mockFetch(payload: unknown) {
 
 describe("DiscoverView", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     mockFetch(jobsResponse());
   });
 
@@ -60,11 +61,16 @@ describe("DiscoverView", () => {
     });
   });
 
-  it("shows the empty pulse prompt when the board has no rows", () => {
+  it("shows a load-jobs control when the board has no rows", async () => {
     mockFetch(jobsResponse([]));
-    const { unmount } = render(<DiscoverView initial={jobsResponse([])} />);
-    expect(screen.getByRole("heading", { name: "No roles yet" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Go to Pulse" })).toBeTruthy();
-    unmount();
+    render(<DiscoverView initial={jobsResponse([])} />);
+    expect(await screen.findByRole("heading", { name: "No roles yet" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Load jobs" })).toBeTruthy();
+  });
+
+  it("opens on the board that was just pulsed", () => {
+    render(<DiscoverView initial={jobsResponse()} focusBoard="arbeitnow" />);
+    expect(screen.getByText("Studio Designer")).toBeTruthy();
+    expect(screen.queryByText("Support Engineer")).toBeNull();
   });
 });

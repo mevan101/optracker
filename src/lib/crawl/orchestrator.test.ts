@@ -4,6 +4,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { readCatalog, writeCatalog } from "@/lib/store/persistence";
 import { crawlPlatform, presentCatalog, screenListings } from "./orchestrator";
+import { emptyIntegrityStats } from "@/lib/domain/types";
 
 const now = new Date("2026-09-05T12:00:00Z");
 
@@ -95,6 +96,8 @@ describe("crawlPlatform", () => {
     expect(result.attempt.stats.accepted).toBe(1);
     expect(result.budget.used).toBe(1);
     expect(result.budget.remaining).toBe(4);
+    expect(result.listings).toHaveLength(1);
+    expect(result.listings[0]?.company).toBe("Linear");
     expect(readCatalog(catalogPath).listings).toHaveLength(1);
     expect(readCatalog(catalogPath).listings[0]?.company).toBe("Linear");
   });
@@ -211,5 +214,73 @@ describe("presentCatalog", () => {
     expect(presented.listings).toHaveLength(1);
     expect(presented.listings[0]?.title).toBe("Support Engineer");
     expect(presented.hidden).toBe(1);
+  });
+
+  it("surfaces the board that was pulsed most recently, even if those roles are older", () => {
+    const presented = presentCatalog(
+      {
+        version: 1,
+        updatedAt: "2026-09-05T12:00:00.000Z",
+        listings: [
+          {
+            id: "arbeitnow:new",
+            platformId: "arbeitnow",
+            platformName: "Arbeitnow",
+            title: "Newer Arbeitnow Role",
+            company: "Linear",
+            location: "Berlin",
+            workMode: "hybrid",
+            url: "https://www.arbeitnow.com/jobs/newer",
+            postedAt: "2026-09-05T11:00:00.000Z",
+            expiresAt: null,
+            tags: ["Design"],
+            salary: null,
+            excerpt: "Shape the product.",
+            sourceRecordId: "newer",
+          },
+          {
+            id: "remotive:old",
+            platformId: "remotive",
+            platformName: "Remotive",
+            title: "Older Remotive Role",
+            company: "GitLab",
+            location: "Remote",
+            workMode: "remote",
+            url: "https://remotive.com/remote-jobs/old",
+            postedAt: "2026-09-04T08:00:00.000Z",
+            expiresAt: null,
+            tags: ["Support"],
+            salary: null,
+            excerpt: "Help customers ship.",
+            sourceRecordId: "old",
+          },
+        ],
+        lastAttempts: [
+          {
+            id: "a-remotive",
+            platformId: "remotive",
+            startedAt: "2026-09-05T12:00:00.000Z",
+            finishedAt: "2026-09-05T12:00:02.000Z",
+            ok: true,
+            stats: emptyIntegrityStats(),
+          },
+          {
+            id: "a-arbeitnow",
+            platformId: "arbeitnow",
+            startedAt: "2026-09-04T12:00:00.000Z",
+            finishedAt: "2026-09-04T12:00:02.000Z",
+            ok: true,
+            stats: emptyIntegrityStats(),
+          },
+        ],
+        budget: { date: "2026-09-05", used: 2, log: [] },
+      },
+      now,
+    );
+
+    expect(presented.listings.map((listing) => listing.title)).toEqual([
+      "Older Remotive Role",
+      "Newer Arbeitnow Role",
+    ]);
   });
 });

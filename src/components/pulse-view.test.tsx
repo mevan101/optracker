@@ -67,7 +67,9 @@ describe("PulseView", () => {
     await waitFor(() => {
       expect(screen.getByText("3")).toBeTruthy();
       expect(screen.getByText("12 live")).toBeTruthy();
-      expect(screen.getByRole("link", { name: "View live roles" })).toBeTruthy();
+      expect(screen.getByRole("link", { name: "See Remotive on Roles" }).getAttribute("href")).toBe(
+        "/?board=remotive",
+      );
     });
     expect(pulsePlatform).toHaveBeenCalledWith("remotive");
   });

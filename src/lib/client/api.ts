@@ -8,8 +8,16 @@ export interface JobsResponse {
   budget: CrawlBudget;
 }
 
+export interface PlatformAttempt {
+  at: string;
+  ok: boolean;
+  accepted: number;
+  error?: string;
+}
+
 export interface PlatformRow extends JobPlatform {
   liveCount: number;
+  lastAttempt: PlatformAttempt | null;
 }
 
 export interface PlatformsResponse {
@@ -21,6 +29,8 @@ export interface CrawlResponse {
   attempt?: CrawlAttempt;
   budget?: CrawlBudget;
   listings?: JobListing[];
+  hidden?: number;
+  updatedAt?: string | null;
   error?: string;
 }
 
@@ -74,4 +84,17 @@ export function formatIntegrity(stats?: IntegrityStats): string {
     stats.invalid +
     stats.duplicate;
   return `${stats.accepted} kept · ${rejected} filtered`;
+}
+
+export function jobsFromCrawl(result: CrawlResponse): JobsResponse | null {
+  if (!result.listings || !result.budget) {
+    return null;
+  }
+  return {
+    listings: result.listings,
+    total: result.listings.length,
+    hidden: result.hidden ?? 0,
+    updatedAt: result.attempt?.finishedAt ?? result.updatedAt ?? null,
+    budget: result.budget,
+  };
 }
