@@ -31,6 +31,7 @@ describe("PlatformsView", () => {
     expect(screen.getByRole("heading", { name: "Boards" })).toBeTruthy();
     expect(screen.getByText("Jobicy")).toBeTruthy();
     expect(screen.getAllByText("Directory only").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Open").length).toBeGreaterThan(0);
 
     emitCatalogChanged();
     await waitFor(() => {

@@ -61,13 +61,21 @@ describe("PulseView", () => {
 
     render(<PulseView initialPlatforms={samplePlatforms} initialBudget={sampleBudget} />);
     expect(screen.getByText("4")).toBeTruthy();
+    expect(
+      screen.getByText(/Each pulse fetches a public JSON feed/),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "See Jobicy on Roles" }).getAttribute("href")).toBe(
+      "/?board=jobicy",
+    );
 
     await user.click(screen.getByRole("button", { name: "Pulse Remotive" }));
 
     await waitFor(() => {
       expect(screen.getByText("3")).toBeTruthy();
       expect(screen.getByText("12 live")).toBeTruthy();
-      expect(screen.getByRole("link", { name: "View live roles" })).toBeTruthy();
+      expect(screen.getByRole("link", { name: "See Remotive on Roles" }).getAttribute("href")).toBe(
+        "/?board=remotive",
+      );
     });
     expect(pulsePlatform).toHaveBeenCalledWith("remotive");
   });
