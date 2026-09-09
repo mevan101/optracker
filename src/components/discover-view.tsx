@@ -161,10 +161,13 @@ export function DiscoverView({
           body={
             filtered
               ? "Clear search or try another filter."
-              : loadError ?? "Load jobs from a public JSON board. This uses one of today's five pulses."
+              : loadError ??
+                (catalog.budget.remaining < 1
+                  ? "Today's five pulses are spent. New roles land after the next UTC day, or from Pulse if a board is already live."
+                  : "Load jobs from a public JSON board. This uses one of today's five pulses.")
           }
           action={
-            filtered ? (
+            filtered || catalog.budget.remaining < 1 ? (
               <Link href="/pulse" className="ghost pressable text-ivory">
                 Go to Pulse
               </Link>
@@ -172,7 +175,7 @@ export function DiscoverView({
               <button
                 type="button"
                 onClick={() => void loadJobs()}
-                disabled={loadingPulse || catalog.budget.remaining < 1}
+                disabled={loadingPulse}
                 className="ghost pressable text-ivory disabled:text-ash"
               >
                 {loadingPulse ? "Loading…" : "Load jobs"}

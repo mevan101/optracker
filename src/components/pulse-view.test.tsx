@@ -9,6 +9,8 @@ import { PulseView } from "./pulse-view";
 
 const pulsePlatform = vi.fn();
 const fetchPlatforms = vi.fn();
+const fetchPokeStatus = vi.fn();
+const sendPokeIntent = vi.fn();
 
 vi.mock("@/lib/client/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/client/api")>("@/lib/client/api");
@@ -16,6 +18,8 @@ vi.mock("@/lib/client/api", async () => {
     ...actual,
     pulsePlatform: (...args: unknown[]) => pulsePlatform(...args),
     fetchPlatforms: (...args: unknown[]) => fetchPlatforms(...args),
+    fetchPokeStatus: (...args: unknown[]) => fetchPokeStatus(...args),
+    sendPokeIntent: (...args: unknown[]) => sendPokeIntent(...args),
   };
 });
 
@@ -23,6 +27,9 @@ describe("PulseView", () => {
   beforeEach(() => {
     pulsePlatform.mockReset();
     fetchPlatforms.mockReset();
+    fetchPokeStatus.mockReset();
+    sendPokeIntent.mockReset();
+    fetchPokeStatus.mockResolvedValue({ configured: true, mcp: true, last: null });
     fetchPlatforms.mockResolvedValue({
       platforms: samplePlatforms.map((platform) =>
         platform.id === "remotive" ? { ...platform, liveCount: 12 } : platform,
@@ -57,6 +64,7 @@ describe("PulseView", () => {
         id: `remotive:${index}`,
         platformId: "remotive",
       })),
+      poke: { configured: true, sent: true, kind: "pulse", summary: "12 Remotive roles" },
     });
 
     render(<PulseView initialPlatforms={samplePlatforms} initialBudget={sampleBudget} />);
@@ -64,9 +72,10 @@ describe("PulseView", () => {
     expect(
       screen.getByText(/Each pulse fetches a public JSON feed/),
     ).toBeTruthy();
-    expect(screen.getByRole("link", { name: "See Jobicy on Roles" }).getAttribute("href")).toBe(
-      "/?board=jobicy",
-    );
+    expect(screen.getByRole("heading", { name: "Poke" })).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Connected")).toBeTruthy();
+    });
 
     await user.click(screen.getByRole("button", { name: "Pulse Remotive" }));
 
@@ -78,5 +87,6 @@ describe("PulseView", () => {
       );
     });
     expect(pulsePlatform).toHaveBeenCalledWith("remotive");
+    expect(screen.getByText(/Poke was briefed/)).toBeTruthy();
   });
 });

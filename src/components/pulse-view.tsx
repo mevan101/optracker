@@ -5,13 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   fetchPlatforms,
+  fetchPokeStatus,
   formatIntegrity,
   jobsFromCrawl,
   pulsePlatform,
+  sendPokeIntent,
   type PlatformRow,
+  type PokeStatusResponse,
 } from "@/lib/client/api";
 import { onCatalogChanged, publishJobsSnapshot } from "@/lib/client/catalog-sync";
 import { formatRelative } from "@/lib/domain/text";
+import { POKE_DOCS_URL, POKE_INTEGRATIONS_URL } from "@/lib/poke/links";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState } from "@/components/states";
 import type { CrawlBudget, IntegrityStats } from "@/lib/domain/types";
@@ -31,6 +35,9 @@ export function PulseView({
   const [lastStats, setLastStats] = useState<IntegrityStats | null>(null);
   const [lastPulseId, setLastPulseId] = useState<string | null>(null);
   const [acceptedNow, setAcceptedNow] = useState(0);
+  const [poke, setPoke] = useState<PokeStatusResponse | null>(null);
+  const [pokeBusy, setPokeBusy] = useState(false);
+  const [pokeNote, setPokeNote] = useState<string | null>(null);
   const router = useRouter();
 
   async function refresh() {
@@ -44,7 +51,17 @@ export function PulseView({
     }
   }
 
+  async function refreshPoke() {
+    try {
+      const status = await fetchPokeStatus();
+      setPoke(status);
+    } catch {
+      setPoke(null);
+    }
+  }
+
   useEffect(() => {
+    void refreshPoke();
     return onCatalogChanged(() => {
       void refresh();
     });
@@ -91,18 +108,43 @@ export function PulseView({
         platforms.find((platform) => platform.id === (attempt?.platformId ?? platformId))?.name ??
         "that source";
       if (attempt?.ok) {
+        const pokeLine = result.poke?.sent
+          ? " Poke was briefed."
+          : result.poke?.configured
+            ? result.poke.error
+              ? ` Poke: ${result.poke.error}.`
+              : ""
+            : "";
         setMessage(
-          `${attempt.stats.accepted} ${name} roles are on the board. ${formatIntegrity(attempt.stats)}.`,
+          `${attempt.stats.accepted} ${name} roles are on the board. ${formatIntegrity(attempt.stats)}.${pokeLine}`,
         );
       } else {
         setMessage(attempt?.error ?? "That JSON feed did not return a usable payload.");
       }
-      await refresh();
+      await Promise.all([refresh(), refreshPoke()]);
       router.refresh();
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Pulse was refused.");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function pingPoke() {
+    setPokeBusy(true);
+    setPokeNote(null);
+    try {
+      const result = await sendPokeIntent("test");
+      if (result.sent) {
+        setPokeNote("Test brief delivered.");
+      } else {
+        setPokeNote(result.error ?? "Poke did not accept that ping.");
+      }
+      await refreshPoke();
+    } catch (err: unknown) {
+      setPokeNote(err instanceof Error ? err.message : "Poke could not be reached.");
+    } finally {
+      setPokeBusy(false);
     }
   }
 
@@ -200,6 +242,40 @@ export function PulseView({
           ))}
         </div>
       )}
+
+      <section id="poke" className="mt-12">
+        <h2 className="font-display text-[26px] font-normal tracking-[-0.025em] text-ivory">
+          Poke
+        </h2>
+        <p className="mt-3 max-w-[34ch] text-[13px] leading-6 text-ash">
+          {poke?.configured
+            ? "Each successful pulse sends a brief to poke.com. Ask Poke from any role."
+            : "Set POKE_API_KEY to brief poke.com after each pulse."}
+        </p>
+        <p className="mt-3 text-[13px] text-mist">
+          {poke?.configured ? "Connected" : "Not connected"}
+          {poke?.last ? ` · Last ${poke.last.kind} ${formatRelative(poke.last.at)}` : ""}
+        </p>
+        {pokeNote ? <p className="mt-3 text-[13px] leading-6 text-ash">{pokeNote}</p> : null}
+        <div className="mt-6 flex flex-wrap items-center gap-5">
+          <button
+            type="button"
+            disabled={pokeBusy || !poke?.configured}
+            onClick={() => void pingPoke()}
+            className="ghost pressable text-ivory disabled:text-ash"
+          >
+            {pokeBusy ? "Sending…" : "Send a test"}
+          </button>
+          <a
+            href={poke?.configured ? POKE_INTEGRATIONS_URL : POKE_DOCS_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="pressable text-[14px] text-ash"
+          >
+            {poke?.configured ? "Add MCP in Poke" : "Kitchen API keys"}
+          </a>
+        </div>
+      </section>
     </div>
   );
 }

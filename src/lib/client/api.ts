@@ -32,6 +32,27 @@ export interface CrawlResponse {
   hidden?: number;
   updatedAt?: string | null;
   error?: string;
+  poke?: PokeSendState;
+}
+
+export interface PokeSendState {
+  configured: boolean;
+  sent: boolean;
+  kind?: "pulse" | "role" | "test";
+  summary?: string;
+  error?: string;
+}
+
+export interface PokeStatusResponse {
+  configured: boolean;
+  mcp: boolean;
+  last: {
+    at: string;
+    ok: boolean;
+    kind: "pulse" | "role" | "test";
+    summary: string;
+    error?: string;
+  } | null;
 }
 
 export async function fetchJobs(params: {
@@ -68,6 +89,30 @@ export async function pulsePlatform(platformId?: string): Promise<CrawlResponse>
   const json = (await response.json()) as CrawlResponse;
   if (!response.ok) {
     throw new Error(json.error ?? "Pulse was refused.");
+  }
+  return json;
+}
+
+export async function fetchPokeStatus(): Promise<PokeStatusResponse> {
+  const response = await fetch("/api/poke", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Poke status is unavailable.");
+  }
+  return response.json();
+}
+
+export async function sendPokeIntent(
+  intent: "test" | "role",
+  listingId?: string,
+): Promise<PokeSendState> {
+  const response = await fetch("/api/poke", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(listingId ? { intent, listingId } : { intent }),
+  });
+  const json = (await response.json()) as PokeSendState & { error?: string };
+  if (!response.ok) {
+    throw new Error(json.error ?? "Poke could not be reached.");
   }
   return json;
 }

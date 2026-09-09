@@ -1,35 +1,20 @@
-import { presentCatalog } from "@/lib/crawl/orchestrator";
+import { queryCatalog } from "@/lib/crawl/query-catalog";
 import { jsonNoStore } from "@/lib/http/no-store";
-import { readCatalog } from "@/lib/store/persistence";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export function GET(request: Request) {
   const url = new URL(request.url);
-  const query = url.searchParams.get("q")?.trim().toLowerCase() ?? "";
-  const platformId = url.searchParams.get("platform")?.trim() ?? "";
-  const workMode = url.searchParams.get("workMode")?.trim() ?? "";
-
-  const presented = presentCatalog(readCatalog());
-  const listings = presented.listings.filter((listing) => {
-    if (platformId && listing.platformId !== platformId) {
-      return false;
-    }
-    if (workMode && listing.workMode !== workMode) {
-      return false;
-    }
-    if (!query) {
-      return true;
-    }
-    const haystack =
-      `${listing.title} ${listing.company} ${listing.location} ${listing.tags.join(" ")}`.toLowerCase();
-    return haystack.includes(query);
+  const presented = queryCatalog({
+    q: url.searchParams.get("q") ?? "",
+    platform: url.searchParams.get("platform") ?? "",
+    workMode: url.searchParams.get("workMode") ?? "",
   });
 
   return jsonNoStore({
-    listings,
-    total: listings.length,
+    listings: presented.listings,
+    total: presented.total,
     hidden: presented.hidden,
     updatedAt: presented.updatedAt,
     budget: presented.budget,

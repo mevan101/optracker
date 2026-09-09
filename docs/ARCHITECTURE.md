@@ -9,6 +9,7 @@ src/app            App Router pages and JSON API
 src/components     Luxury-minimal UI (Discover, Boards, Pulse, Saved, states)
 src/lib/domain     Platforms catalog, validation, integrity filters
 src/lib/crawl      Daily budget, source adapters, screening, orchestration
+src/lib/poke       Outbound Poke briefs + inbound MCP tools
 src/lib/store      Filesystem catalog (no invented seed listings)
 ```
 
@@ -68,3 +69,5 @@ Editorial luxury on obsidian `#09090b`: Inter + SF Pro, `-0.02em` tracking, hair
 - Reserved min-heights on headers, empty states, and cards reduce layout shift at 402px.
 - Catalog writes are atomic. Overlapping pulses are serialized so the daily cap cannot be double-spent.
 - `presentCatalog` re-validates stored rows so a corrupt or mock record cannot reappear on read.
+- After a pulse keeps roles, OpTracker may brief Poke (`POKE_API_KEY`). A Poke failure never writes listings or spends an extra pulse.
+- Poke MCP (`/mcp`) reads the same screened catalog the UI shows. `pulse_board` is the only mutating tool and still pays the five-per-day cap.

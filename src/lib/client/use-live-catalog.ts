@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   fetchJobs,
   fetchPlatforms,
@@ -13,6 +13,7 @@ import {
   readJobsSnapshot,
   saveJobsSnapshot,
 } from "@/lib/client/catalog-sync";
+import { MAX_CRAWLS_PER_DAY } from "@/lib/domain/types";
 import type { JobListing } from "@/lib/domain/types";
 
 export function useLiveJobs(initial: JobsResponse): JobsResponse {
@@ -60,38 +61,22 @@ export function useLiveJobs(initial: JobsResponse): JobsResponse {
 }
 
 export function useLiveListings(initial: JobListing[]): JobListing[] {
-  const [listings, setListings] = useState(initial);
-
-  useEffect(() => {
-    const state = { active: true };
-
-    async function pull() {
-      const snapshot = readJobsSnapshot();
-      if (snapshot && state.active) {
-        setListings(snapshot.listings);
-      }
-      try {
-        const next = await fetchJobs();
-        if (state.active) {
-          setListings(next.listings);
-          saveJobsSnapshot(next);
-        }
-      } catch {
-        // Keep the last good list painted.
-      }
-    }
-
-    void pull();
-    const stop = onCatalogChanged(() => {
-      void pull();
-    });
-    return () => {
-      state.active = false;
-      stop();
+  const seed = useMemo((): JobsResponse => {
+    return {
+      listings: initial,
+      total: initial.length,
+      hidden: 0,
+      updatedAt: null,
+      budget: {
+        date: "",
+        used: 0,
+        limit: MAX_CRAWLS_PER_DAY,
+        remaining: MAX_CRAWLS_PER_DAY,
+        log: [],
+      },
     };
-  }, []);
-
-  return listings;
+  }, [initial]);
+  return useLiveJobs(seed).listings;
 }
 
 export function useLivePlatforms(initial: PlatformRow[]): PlatformRow[] {

@@ -8,6 +8,7 @@ coverage
 .env
 .env*.local
 data/catalog.json
+data/poke-status.json
 data/*.bak
 .turbo
 tsconfig.tsbuildinfo

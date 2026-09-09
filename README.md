@@ -26,9 +26,9 @@ npm run dev
 
 - **Roles** — live, already-screened listings
 - **Boards** — curated real platforms (API + directory)
-- **Pulse** — at most five source fetches per UTC day
+- **Pulse** — at most five source fetches per UTC day, with an optional brief to [Poke](https://poke.com)
 - **Saved** — device-local bookmarks of still-live roles
 
 ## Data policy
 
-No seed jobs are committed. An empty board is the honest default. Pulse a public API from `/pulse` to populate `data/catalog.json` (gitignored). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DATA_INTEGRITY.md](docs/DATA_INTEGRITY.md).
+No seed jobs are committed. An empty board is the honest default. Pulse a public API from `/pulse` to populate `data/catalog.json` (gitignored). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATA_INTEGRITY.md](docs/DATA_INTEGRITY.md), and [docs/POKE.md](docs/POKE.md).
