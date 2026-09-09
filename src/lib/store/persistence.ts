@@ -2,8 +2,9 @@ import { mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "
 import path from "node:path";
 import type { CatalogSnapshot, CrawlAttempt, JobListing } from "@/lib/domain/types";
 import { utcDay } from "@/lib/domain/text";
+import { catalogFilePath } from "./paths";
 
-const DEFAULT_PATH = path.join(process.cwd(), "data", "catalog.json");
+const DEFAULT_PATH = catalogFilePath();
 
 function emptySnapshot(): CatalogSnapshot {
   return {

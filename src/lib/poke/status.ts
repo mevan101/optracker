@@ -1,7 +1,8 @@
 import { mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { pokeStatusFilePath } from "@/lib/store/paths";
 
-const DEFAULT_PATH = path.join(process.cwd(), "data", "poke-status.json");
+const DEFAULT_PATH = pokeStatusFilePath();
 
 export type PokeBriefKind = "pulse" | "role" | "test";
 
