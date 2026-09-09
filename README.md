@@ -26,7 +26,7 @@ npm run dev
 
 - **Roles** — live, already-screened listings
 - **Boards** — curated real platforms (API + directory)
-- **Pulse** — at most five source fetches per UTC day, with an optional brief to [Poke](https://poke.com)
+- **Pulse** — at most five source fetches per UTC day; Poke can also deploy the public site
 - **Saved** — device-local bookmarks of still-live roles
 
 ## Data policy

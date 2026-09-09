@@ -14,6 +14,23 @@ This is a bridge, not a scrape. Directory boards stay links. Integrity screening
 
 A missing key, a failed pulse, or a pulse that kept zero roles does not call Poke. A Poke outage never rolls back the catalog.
 
+## Deploy
+
+Poke owns the public host. Connect the **Vercel** recipe at [poke.com/recipes](https://poke.com/recipes), then send this brief (Pulse → **Copy deploy brief**, or **Ask Poke to deploy** when `POKE_API_KEY` is set):
+
+```
+Deploy OpTracker as a permanent public site using my Vercel integration.
+Do not use an anonymous 60-minute Vercel claim link. Create or update a Vercel project tied to this GitHub repo so the URL stays up on every push.
+
+Repo: https://github.com/mevan101/optracker
+Branch: cursor/poke-sync-flawless-7446
+PR: https://github.com/mevan101/optracker/pull/3
+```
+
+GitHub Actions: **Ask Poke to deploy** (`workflow_dispatch`) posts the same brief when `POKE_API_KEY` is a repository secret.
+
+Once the site is live, point Poke MCP at `https://<host>/mcp`.
+
 ## Inbound MCP
 
 Poke can query the same screened board the UI shows.

@@ -1,0 +1,17 @@
+name: Ask Poke to deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Send deploy brief to Poke
+        env:
+          POKE_API_KEY: ${{ secrets.POKE_API_KEY }}
+        run: node scripts/ask-poke-deploy.mjs

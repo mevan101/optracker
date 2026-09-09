@@ -2,14 +2,15 @@ import { z } from "zod";
 import { jsonNoStore } from "@/lib/http/no-store";
 import { queryCatalog } from "@/lib/crawl/query-catalog";
 import { isMcpConfigured, isPokeConfigured } from "@/lib/poke/config";
-import { notifyRole, notifyTest } from "@/lib/poke/client";
+import { notifyDeploy, notifyRole, notifyTest } from "@/lib/poke/client";
+import { buildDeployBrief } from "@/lib/poke/brief";
 import { readPokeStatus } from "@/lib/poke/status";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
-  intent: z.enum(["test", "role"]),
+  intent: z.enum(["test", "role", "deploy"]),
   listingId: z.string().min(1).optional(),
 });
 
@@ -19,6 +20,7 @@ export function GET() {
     configured: isPokeConfigured(),
     mcp: isMcpConfigured(),
     last: stored.last,
+    deployBrief: buildDeployBrief(),
   });
 }
 
@@ -37,6 +39,9 @@ export async function POST(request: Request) {
 
   if (parsed.intent === "test") {
     return jsonNoStore(await notifyTest());
+  }
+  if (parsed.intent === "deploy") {
+    return jsonNoStore(await notifyDeploy());
   }
 
   const listingId = parsed.listingId;

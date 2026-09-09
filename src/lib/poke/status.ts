@@ -4,7 +4,7 @@ import { pokeStatusFilePath } from "@/lib/store/paths";
 
 const DEFAULT_PATH = pokeStatusFilePath();
 
-export type PokeBriefKind = "pulse" | "role" | "test";
+export type PokeBriefKind = "pulse" | "role" | "test" | "deploy";
 
 export interface PokeLastSend {
   at: string;

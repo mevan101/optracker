@@ -67,3 +67,34 @@ export function buildTestBrief(): string {
     "Do not create calendar events, send email, or take any other action.",
   ].join("\n");
 }
+
+export const OPTRACKER_REPO_URL = "https://github.com/mevan101/optracker";
+export const OPTRACKER_PR_URL = "https://github.com/mevan101/optracker/pull/3";
+export const OPTRACKER_DEPLOY_BRANCH = "cursor/poke-sync-flawless-7446";
+
+export function buildDeployBrief(input: {
+  repoUrl?: string;
+  branch?: string;
+  prUrl?: string;
+} = {}): string {
+  const repoUrl = input.repoUrl ?? OPTRACKER_REPO_URL;
+  const branch = input.branch ?? OPTRACKER_DEPLOY_BRANCH;
+  const prUrl = input.prUrl ?? OPTRACKER_PR_URL;
+  return [
+    "Deploy OpTracker as a permanent public site using my Vercel integration.",
+    "Do not use an anonymous 60-minute Vercel claim link. Create or update a Vercel project tied to this GitHub repo so the URL stays up on every push.",
+    "",
+    `Repo: ${repoUrl}`,
+    `Branch: ${branch}`,
+    `PR: ${prUrl}`,
+    "",
+    "Stack: Next.js 15, Node 22, `npm ci` then `npm run build`.",
+    "On Vercel the job catalog writes to /tmp (or OPTRACKER_DATA_DIR). That is expected.",
+    "Optional env: POKE_API_KEY (Kitchen V2 inbound), OPTRACKER_MCP_TOKEN (Bearer for /mcp).",
+    "",
+    "When it is live:",
+    "- Reply with the permanent https://*.vercel.app URL.",
+    "- Attach MCP at https://<that-host>/mcp so I can list roles from chat.",
+    "- Do not merge the PR, email anyone, or spend OpTracker pulses.",
+  ].join("\n");
+}

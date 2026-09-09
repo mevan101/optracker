@@ -76,6 +76,8 @@ describe("PulseView", () => {
     await waitFor(() => {
       expect(screen.getByText("Connected")).toBeTruthy();
     });
+    expect(screen.getByRole("button", { name: "Ask Poke to deploy" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Copy deploy brief" })).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Pulse Remotive" }));
 

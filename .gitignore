@@ -12,3 +12,4 @@ data/poke-status.json
 data/*.bak
 .turbo
 tsconfig.tsbuildinfo
+.vercel

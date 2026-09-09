@@ -1,5 +1,5 @@
 import { POKE_INBOUND_URL, isPokeConfigured, pokeApiKey } from "./config";
-import { buildPulseBrief, buildRoleBrief, buildTestBrief } from "./brief";
+import { buildPulseBrief, buildRoleBrief, buildTestBrief, buildDeployBrief } from "./brief";
 import { recordPokeSend, type PokeBriefKind } from "./status";
 import type { CrawlBudget, IntegrityStats, JobListing } from "@/lib/domain/types";
 
@@ -107,4 +107,11 @@ export async function notifyTest(): Promise<PokeSendResult> {
     return { configured: false, sent: false, error: "POKE_API_KEY is not set." };
   }
   return sendPokeMessage(buildTestBrief(), "test", "Test ping");
+}
+
+export async function notifyDeploy(): Promise<PokeSendResult> {
+  if (!isPokeConfigured()) {
+    return { configured: false, sent: false, error: "POKE_API_KEY is not set." };
+  }
+  return sendPokeMessage(buildDeployBrief(), "deploy", "Ask Poke to deploy");
 }

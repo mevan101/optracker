@@ -38,7 +38,7 @@ export interface CrawlResponse {
 export interface PokeSendState {
   configured: boolean;
   sent: boolean;
-  kind?: "pulse" | "role" | "test";
+  kind?: "pulse" | "role" | "test" | "deploy";
   summary?: string;
   error?: string;
 }
@@ -46,10 +46,11 @@ export interface PokeSendState {
 export interface PokeStatusResponse {
   configured: boolean;
   mcp: boolean;
+  deployBrief?: string;
   last: {
     at: string;
     ok: boolean;
-    kind: "pulse" | "role" | "test";
+    kind: "pulse" | "role" | "test" | "deploy";
     summary: string;
     error?: string;
   } | null;
@@ -102,7 +103,7 @@ export async function fetchPokeStatus(): Promise<PokeStatusResponse> {
 }
 
 export async function sendPokeIntent(
-  intent: "test" | "role",
+  intent: "test" | "role" | "deploy",
   listingId?: string,
 ): Promise<PokeSendState> {
   const response = await fetch("/api/poke", {

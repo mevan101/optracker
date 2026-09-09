@@ -15,7 +15,8 @@ import {
 } from "@/lib/client/api";
 import { onCatalogChanged, publishJobsSnapshot } from "@/lib/client/catalog-sync";
 import { formatRelative } from "@/lib/domain/text";
-import { POKE_DOCS_URL, POKE_INTEGRATIONS_URL } from "@/lib/poke/links";
+import { POKE_CHAT_URL, POKE_DOCS_URL, POKE_INTEGRATIONS_URL, POKE_VERCEL_RECIPE_URL } from "@/lib/poke/links";
+import { buildDeployBrief } from "@/lib/poke/brief";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState } from "@/components/states";
 import type { CrawlBudget, IntegrityStats } from "@/lib/domain/types";
@@ -148,6 +149,34 @@ export function PulseView({
     }
   }
 
+  async function askPokeToDeploy() {
+    setPokeBusy(true);
+    setPokeNote(null);
+    try {
+      const result = await sendPokeIntent("deploy");
+      if (result.sent) {
+        setPokeNote("Poke has the deploy brief. It will reply with the live URL.");
+      } else {
+        setPokeNote(result.error ?? "Poke did not accept that deploy brief.");
+      }
+      await refreshPoke();
+    } catch (err: unknown) {
+      setPokeNote(err instanceof Error ? err.message : "Poke could not be reached.");
+    } finally {
+      setPokeBusy(false);
+    }
+  }
+
+  async function copyDeployBrief() {
+    const brief = poke?.deployBrief ?? buildDeployBrief();
+    try {
+      await navigator.clipboard.writeText(brief);
+      setPokeNote("Deploy brief copied. Paste it in Poke.");
+    } catch {
+      setPokeNote("Copy failed. Open Poke and paste from docs/POKE.md.");
+    }
+  }
+
   const crawlable = platforms.filter((platform) => platform.crawlable);
   const remainingRatio = budget.remaining / budget.limit;
   const latestPulse = [...crawlable]
@@ -249,8 +278,8 @@ export function PulseView({
         </h2>
         <p className="mt-3 max-w-[34ch] text-[13px] leading-6 text-ash">
           {poke?.configured
-            ? "Each successful pulse sends a brief to poke.com. Ask Poke from any role."
-            : "Set POKE_API_KEY to brief poke.com after each pulse."}
+            ? "Poke deploys the public site through its Vercel recipe. Pulses still brief new roles."
+            : "Poke can deploy this with its Vercel recipe. Copy the brief, or set POKE_API_KEY so Pulse can send it."}
         </p>
         <p className="mt-3 text-[13px] text-mist">
           {poke?.configured ? "Connected" : "Not connected"}
@@ -261,11 +290,39 @@ export function PulseView({
           <button
             type="button"
             disabled={pokeBusy || !poke?.configured}
-            onClick={() => void pingPoke()}
+            onClick={() => void askPokeToDeploy()}
             className="ghost pressable text-ivory disabled:text-ash"
           >
-            {pokeBusy ? "Sending…" : "Send a test"}
+            {pokeBusy ? "Sending…" : "Ask Poke to deploy"}
           </button>
+          <button
+            type="button"
+            onClick={() => void copyDeployBrief()}
+            className="pressable text-[14px] text-ivory"
+          >
+            Copy deploy brief
+          </button>
+          <a href={POKE_CHAT_URL} target="_blank" rel="noreferrer" className="pressable text-[14px] text-ash">
+            Open Poke
+          </a>
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-5">
+          <button
+            type="button"
+            disabled={pokeBusy || !poke?.configured}
+            onClick={() => void pingPoke()}
+            className="pressable text-[14px] text-ash disabled:text-ash/50"
+          >
+            Send a test
+          </button>
+          <a
+            href={POKE_VERCEL_RECIPE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="pressable text-[14px] text-ash"
+          >
+            Vercel recipe
+          </a>
           <a
             href={poke?.configured ? POKE_INTEGRATIONS_URL : POKE_DOCS_URL}
             target="_blank"
