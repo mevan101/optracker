@@ -12,7 +12,7 @@ export async function fetchJson<T>(
   url: string,
   options: { timeoutMs?: number; headers?: Record<string, string> } = {},
 ): Promise<T> {
-  const timeoutMs = options.timeoutMs ?? 12_000;
+  const timeoutMs = options.timeoutMs ?? 20_000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 

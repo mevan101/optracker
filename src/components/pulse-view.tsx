@@ -5,11 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   fetchPlatforms,
+  fetchPokeStatus,
   formatIntegrity,
+  jobsFromCrawl,
   pulsePlatform,
+  sendPokeIntent,
   type PlatformRow,
+  type PokeStatusResponse,
 } from "@/lib/client/api";
-import { emitCatalogChanged } from "@/lib/client/catalog-sync";
+import { onCatalogChanged, publishJobsSnapshot } from "@/lib/client/catalog-sync";
+import { formatRelative } from "@/lib/domain/text";
+import { POKE_CHAT_URL, POKE_DOCS_URL, POKE_INTEGRATIONS_URL, POKE_VERCEL_RECIPE_URL } from "@/lib/poke/links";
+import { buildDeployBrief } from "@/lib/poke/brief";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState } from "@/components/states";
 import type { CrawlBudget, IntegrityStats } from "@/lib/domain/types";
@@ -27,13 +34,12 @@ export function PulseView({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastStats, setLastStats] = useState<IntegrityStats | null>(null);
+  const [lastPulseId, setLastPulseId] = useState<string | null>(null);
   const [acceptedNow, setAcceptedNow] = useState(0);
+  const [poke, setPoke] = useState<PokeStatusResponse | null>(null);
+  const [pokeBusy, setPokeBusy] = useState(false);
+  const [pokeNote, setPokeNote] = useState<string | null>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    setPlatforms(initialPlatforms);
-    setBudget(initialBudget);
-  }, [initialPlatforms, initialBudget]);
 
   async function refresh() {
     setError(null);
@@ -46,6 +52,22 @@ export function PulseView({
     }
   }
 
+  async function refreshPoke() {
+    try {
+      const status = await fetchPokeStatus();
+      setPoke(status);
+    } catch {
+      setPoke(null);
+    }
+  }
+
+  useEffect(() => {
+    void refreshPoke();
+    return onCatalogChanged(() => {
+      void refresh();
+    });
+  }, []);
+
   async function runPulse(platformId: string) {
     setBusyId(platformId);
     setMessage(null);
@@ -54,26 +76,53 @@ export function PulseView({
       if (result.budget) {
         setBudget(result.budget);
       }
-      if (result.listings) {
+      const snapshot = jobsFromCrawl(result);
+      if (snapshot) {
+        publishJobsSnapshot(snapshot);
+      }
+      const attempt = result.attempt;
+      if (attempt) {
         setPlatforms((current) =>
-          current.map((platform) => ({
-            ...platform,
-            liveCount: result.listings!.filter((listing) => listing.platformId === platform.id)
-              .length,
-          })),
+          current.map((platform) => {
+            if (platform.id !== attempt.platformId) {
+              return platform;
+            }
+            return {
+              ...platform,
+              liveCount:
+                result.listings?.filter((listing) => listing.platformId === platform.id).length ??
+                attempt.stats.accepted,
+              lastAttempt: {
+                at: attempt.finishedAt,
+                ok: attempt.ok,
+                accepted: attempt.stats.accepted,
+                error: attempt.error,
+              },
+            };
+          }),
         );
       }
-      setLastStats(result.attempt?.stats ?? null);
-      setAcceptedNow(result.attempt?.stats.accepted ?? 0);
-      if (result.attempt?.ok) {
+      setLastPulseId(attempt?.platformId ?? platformId);
+      setLastStats(attempt?.stats ?? null);
+      setAcceptedNow(attempt?.stats.accepted ?? 0);
+      const name =
+        platforms.find((platform) => platform.id === (attempt?.platformId ?? platformId))?.name ??
+        "that source";
+      if (attempt?.ok) {
+        const pokeLine = result.poke?.sent
+          ? " Poke was briefed."
+          : result.poke?.configured
+            ? result.poke.error
+              ? ` Poke: ${result.poke.error}.`
+              : ""
+            : "";
         setMessage(
-          `${result.attempt.stats.accepted} kept. ${formatIntegrity(result.attempt.stats)}.`,
+          `${attempt.stats.accepted} ${name} roles are on the board. ${formatIntegrity(attempt.stats)}.${pokeLine}`,
         );
       } else {
-        setMessage(result.attempt?.error ?? "That source did not return a usable feed.");
+        setMessage(attempt?.error ?? "That JSON feed did not return a usable payload.");
       }
-      emitCatalogChanged();
-      await refresh();
+      await Promise.all([refresh(), refreshPoke()]);
       router.refresh();
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Pulse was refused.");
@@ -82,8 +131,64 @@ export function PulseView({
     }
   }
 
+  async function pingPoke() {
+    setPokeBusy(true);
+    setPokeNote(null);
+    try {
+      const result = await sendPokeIntent("test");
+      if (result.sent) {
+        setPokeNote("Test brief delivered.");
+      } else {
+        setPokeNote(result.error ?? "Poke did not accept that ping.");
+      }
+      await refreshPoke();
+    } catch (err: unknown) {
+      setPokeNote(err instanceof Error ? err.message : "Poke could not be reached.");
+    } finally {
+      setPokeBusy(false);
+    }
+  }
+
+  async function askPokeToDeploy() {
+    setPokeBusy(true);
+    setPokeNote(null);
+    try {
+      const result = await sendPokeIntent("deploy");
+      if (result.sent) {
+        setPokeNote("Poke has the deploy brief. It will reply with the live URL.");
+      } else {
+        setPokeNote(result.error ?? "Poke did not accept that deploy brief.");
+      }
+      await refreshPoke();
+    } catch (err: unknown) {
+      setPokeNote(err instanceof Error ? err.message : "Poke could not be reached.");
+    } finally {
+      setPokeBusy(false);
+    }
+  }
+
+  async function copyDeployBrief() {
+    const brief = poke?.deployBrief ?? buildDeployBrief();
+    try {
+      await navigator.clipboard.writeText(brief);
+      setPokeNote("Deploy brief copied. Paste it in Poke.");
+    } catch {
+      setPokeNote("Copy failed. Open Poke and paste from docs/POKE.md.");
+    }
+  }
+
   const crawlable = platforms.filter((platform) => platform.crawlable);
   const remainingRatio = budget.remaining / budget.limit;
+  const latestPulse = [...crawlable]
+    .filter(
+      (platform) => platform.lastAttempt?.ok && (platform.lastAttempt.accepted ?? 0) > 0,
+    )
+    .sort(
+      (a, b) => Date.parse(b.lastAttempt!.at) - Date.parse(a.lastAttempt!.at),
+    )[0];
+  const ctaId = lastPulseId ?? latestPulse?.id ?? null;
+  const ctaName = platforms.find((platform) => platform.id === ctaId)?.name;
+  const showBoardLink = Boolean(ctaId && (acceptedNow > 0 || latestPulse));
 
   return (
     <div>
@@ -105,6 +210,10 @@ export function PulseView({
             style={{ transform: `scaleX(${remainingRatio})` }}
           />
         </div>
+        <p className="mt-4 max-w-[34ch] text-[13px] leading-6 text-ash">
+          Each pulse fetches a public JSON feed. LinkedIn, Indeed, and the other HTML boards stay
+          as links — they are not scraped.
+        </p>
         <p className="mt-3 text-[12px] tabular-nums text-ash">{budget.date} UTC</p>
       </section>
 
@@ -118,16 +227,16 @@ export function PulseView({
         </p>
       ) : null}
 
-      {acceptedNow > 0 ? (
+      {showBoardLink && ctaId ? (
         <p className="mb-8">
-          <Link href="/" className="pressable text-[14px] text-ivory">
-            View live roles
+          <Link href={`/?board=${encodeURIComponent(ctaId)}`} className="pressable text-[14px] text-ivory">
+            {ctaName ? `See ${ctaName} on Roles` : "View live roles"}
           </Link>
         </p>
       ) : null}
 
       {crawlable.length === 0 ? (
-        <EmptyState title="No sources" body="No public API adapters are registered." />
+        <EmptyState title="No sources" body="No public JSON adapters are registered." />
       ) : (
         <div>
           {crawlable.map((platform) => (
@@ -139,8 +248,14 @@ export function PulseView({
                 <h2 className="text-[16.5px] font-medium tracking-[-0.025em] text-ivory">
                   {platform.name}
                 </h2>
-                <p className="mt-1 text-[13px] tabular-nums text-ash">
-                  {platform.liveCount} live
+                <p className="mt-1 text-[13px] text-ash">
+                  <span className="tabular-nums">{platform.liveCount} live</span>
+                  <span className="text-ash/70"> · </span>
+                  {platform.lastAttempt
+                    ? platform.lastAttempt.ok
+                      ? formatRelative(platform.lastAttempt.at)
+                      : platform.lastAttempt.error ?? "Failed"
+                    : "Not pulsed"}
                 </p>
               </div>
               <button
@@ -156,6 +271,68 @@ export function PulseView({
           ))}
         </div>
       )}
+
+      <section id="poke" className="mt-12">
+        <h2 className="font-display text-[26px] font-normal tracking-[-0.025em] text-ivory">
+          Poke
+        </h2>
+        <p className="mt-3 max-w-[34ch] text-[13px] leading-6 text-ash">
+          {poke?.configured
+            ? "Poke deploys the public site through its Vercel recipe. Pulses still brief new roles."
+            : "Poke can deploy this with its Vercel recipe. Copy the brief, or set POKE_API_KEY so Pulse can send it."}
+        </p>
+        <p className="mt-3 text-[13px] text-mist">
+          {poke?.configured ? "Connected" : "Not connected"}
+          {poke?.last ? ` · Last ${poke.last.kind} ${formatRelative(poke.last.at)}` : ""}
+        </p>
+        {pokeNote ? <p className="mt-3 text-[13px] leading-6 text-ash">{pokeNote}</p> : null}
+        <div className="mt-6 flex flex-wrap items-center gap-5">
+          <button
+            type="button"
+            disabled={pokeBusy || !poke?.configured}
+            onClick={() => void askPokeToDeploy()}
+            className="ghost pressable text-ivory disabled:text-ash"
+          >
+            {pokeBusy ? "Sending…" : "Ask Poke to deploy"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void copyDeployBrief()}
+            className="pressable text-[14px] text-ivory"
+          >
+            Copy deploy brief
+          </button>
+          <a href={POKE_CHAT_URL} target="_blank" rel="noreferrer" className="pressable text-[14px] text-ash">
+            Open Poke
+          </a>
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-5">
+          <button
+            type="button"
+            disabled={pokeBusy || !poke?.configured}
+            onClick={() => void pingPoke()}
+            className="pressable text-[14px] text-ash disabled:text-ash/50"
+          >
+            Send a test
+          </button>
+          <a
+            href={POKE_VERCEL_RECIPE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="pressable text-[14px] text-ash"
+          >
+            Vercel recipe
+          </a>
+          <a
+            href={poke?.configured ? POKE_INTEGRATIONS_URL : POKE_DOCS_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="pressable text-[14px] text-ash"
+          >
+            {poke?.configured ? "Add MCP in Poke" : "Kitchen API keys"}
+          </a>
+        </div>
+      </section>
     </div>
   );
 }

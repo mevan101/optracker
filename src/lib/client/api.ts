@@ -8,8 +8,16 @@ export interface JobsResponse {
   budget: CrawlBudget;
 }
 
+export interface PlatformAttempt {
+  at: string;
+  ok: boolean;
+  accepted: number;
+  error?: string;
+}
+
 export interface PlatformRow extends JobPlatform {
   liveCount: number;
+  lastAttempt: PlatformAttempt | null;
 }
 
 export interface PlatformsResponse {
@@ -21,7 +29,31 @@ export interface CrawlResponse {
   attempt?: CrawlAttempt;
   budget?: CrawlBudget;
   listings?: JobListing[];
+  hidden?: number;
+  updatedAt?: string | null;
   error?: string;
+  poke?: PokeSendState;
+}
+
+export interface PokeSendState {
+  configured: boolean;
+  sent: boolean;
+  kind?: "pulse" | "role" | "test" | "deploy";
+  summary?: string;
+  error?: string;
+}
+
+export interface PokeStatusResponse {
+  configured: boolean;
+  mcp: boolean;
+  deployBrief?: string;
+  last: {
+    at: string;
+    ok: boolean;
+    kind: "pulse" | "role" | "test" | "deploy";
+    summary: string;
+    error?: string;
+  } | null;
 }
 
 export async function fetchJobs(params: {
@@ -62,6 +94,30 @@ export async function pulsePlatform(platformId?: string): Promise<CrawlResponse>
   return json;
 }
 
+export async function fetchPokeStatus(): Promise<PokeStatusResponse> {
+  const response = await fetch("/api/poke", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Poke status is unavailable.");
+  }
+  return response.json();
+}
+
+export async function sendPokeIntent(
+  intent: "test" | "role" | "deploy",
+  listingId?: string,
+): Promise<PokeSendState> {
+  const response = await fetch("/api/poke", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(listingId ? { intent, listingId } : { intent }),
+  });
+  const json = (await response.json()) as PokeSendState & { error?: string };
+  if (!response.ok) {
+    throw new Error(json.error ?? "Poke could not be reached.");
+  }
+  return json;
+}
+
 export function formatIntegrity(stats?: IntegrityStats): string {
   if (!stats) {
     return "No pulse yet";
@@ -74,4 +130,17 @@ export function formatIntegrity(stats?: IntegrityStats): string {
     stats.invalid +
     stats.duplicate;
   return `${stats.accepted} kept · ${rejected} filtered`;
+}
+
+export function jobsFromCrawl(result: CrawlResponse): JobsResponse | null {
+  if (!result.listings || !result.budget) {
+    return null;
+  }
+  return {
+    listings: result.listings,
+    total: result.listings.length,
+    hidden: result.hidden ?? 0,
+    updatedAt: result.attempt?.finishedAt ?? result.updatedAt ?? null,
+    budget: result.budget,
+  };
 }

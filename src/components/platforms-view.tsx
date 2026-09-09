@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/states";
 import { PageHeader } from "@/components/page-header";
 import type { PlatformRow } from "@/lib/client/api";
 import { useLivePlatforms } from "@/lib/client/use-live-catalog";
+import { formatRelative } from "@/lib/domain/text";
 
 export function PlatformsView({ platforms }: { platforms: PlatformRow[] }) {
   const live = useLivePlatforms(platforms);
@@ -29,11 +30,15 @@ export function PlatformsView({ platforms }: { platforms: PlatformRow[] }) {
                   {platform.name}
                 </h2>
                 <p className="mt-1.5 text-[13px] text-ash">
-                  {platform.crawlable ? "Public API" : "Directory only"}
+                  {platform.crawlable
+                    ? platform.lastAttempt
+                      ? `JSON feed · ${formatRelative(platform.lastAttempt.at)}`
+                      : "JSON feed · Not pulsed"
+                    : "Directory only"}
                 </p>
               </div>
               <p className="shrink-0 pt-0.5 text-[13px] tabular-nums text-mist">
-                {platform.liveCount}
+                {platform.crawlable ? platform.liveCount : "Open"}
               </p>
             </a>
           ))}

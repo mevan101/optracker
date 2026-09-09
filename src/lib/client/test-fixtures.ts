@@ -62,4 +62,12 @@ export function jobsResponse(listings = sampleListings): JobsResponse {
 export const samplePlatforms: PlatformRow[] = JOB_PLATFORMS.map((platform) => ({
   ...platform,
   liveCount: platform.id === "jobicy" ? 2 : 0,
+  lastAttempt:
+    platform.id === "jobicy"
+      ? {
+          at: "2026-09-07T01:00:00.000Z",
+          ok: true,
+          accepted: 2,
+        }
+      : null,
 }));

@@ -103,6 +103,8 @@ export interface CrawlResult {
   attempt: CrawlAttempt;
   budget: ReturnType<typeof resolveBudget>;
   listings: JobListing[];
+  hidden: number;
+  updatedAt: string | null;
 }
 
 export async function crawlPlatform(options: CrawlOptions): Promise<CrawlResult> {
@@ -151,11 +153,7 @@ async function crawlPlatformUnlocked(options: CrawlOptions): Promise<CrawlResult
       lastAttempts: [attempt, ...snapshot.lastAttempts].slice(0, 20),
     };
     writeCatalog(snapshot, options.catalogPath);
-    return {
-      attempt,
-      budget: resolveBudget(snapshot, now),
-      listings: snapshot.listings,
-    };
+    return presentCrawl(snapshot, attempt, now);
   }
 
   const knownUrls = new Set(
@@ -182,11 +180,7 @@ async function crawlPlatformUnlocked(options: CrawlOptions): Promise<CrawlResult
   );
   writeCatalog(snapshot, options.catalogPath);
 
-  return {
-    attempt,
-    budget: resolveBudget(snapshot, now),
-    listings: snapshot.listings,
-  };
+  return presentCrawl(snapshot, attempt, now);
 }
 
 function makeAttempt(partial: Omit<CrawlAttempt, "id">): CrawlAttempt {
@@ -194,6 +188,46 @@ function makeAttempt(partial: Omit<CrawlAttempt, "id">): CrawlAttempt {
     id: randomUUID(),
     ...partial,
   };
+}
+
+function presentCrawl(
+  snapshot: CatalogSnapshot,
+  attempt: CrawlAttempt,
+  now: Date,
+): CrawlResult {
+  const presented = presentCatalog(snapshot, now);
+  return {
+    attempt,
+    budget: presented.budget,
+    listings: presented.listings,
+    hidden: presented.hidden,
+    updatedAt: presented.updatedAt,
+  };
+}
+
+function pulseRank(lastAttempts: CrawlAttempt[], platformId: string): number {
+  const attempt = lastAttempts.find(
+    (item) => item.platformId === platformId && item.ok,
+  );
+  if (!attempt) {
+    return 0;
+  }
+  const time = Date.parse(attempt.finishedAt);
+  return Number.isFinite(time) ? time : 0;
+}
+
+export function compareListingsForBoard(
+  a: JobListing,
+  b: JobListing,
+  lastAttempts: CrawlAttempt[],
+): number {
+  const pulseDelta = pulseRank(lastAttempts, b.platformId) - pulseRank(lastAttempts, a.platformId);
+  if (pulseDelta !== 0) {
+    return pulseDelta;
+  }
+  const aTime = a.postedAt ? Date.parse(a.postedAt) : 0;
+  const bTime = b.postedAt ? Date.parse(b.postedAt) : 0;
+  return bTime - aTime;
 }
 
 export function presentCatalog(snapshot: CatalogSnapshot, now = new Date()) {
@@ -204,12 +238,9 @@ export function presentCatalog(snapshot: CatalogSnapshot, now = new Date()) {
     }
     return [validated.listing];
   });
+  live.sort((a, b) => compareListingsForBoard(a, b, snapshot.lastAttempts));
   return {
-    listings: live.sort((a, b) => {
-      const aTime = a.postedAt ? Date.parse(a.postedAt) : 0;
-      const bTime = b.postedAt ? Date.parse(b.postedAt) : 0;
-      return bTime - aTime;
-    }),
+    listings: live,
     hidden: snapshot.listings.length - live.length,
     budget: resolveBudget(snapshot, now),
     lastAttempts: snapshot.lastAttempts,

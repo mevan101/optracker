@@ -5,8 +5,10 @@ import {
   crawlPlatform,
 } from "@/lib/crawl/orchestrator";
 import { resolveBudget } from "@/lib/crawl/budget";
-import { getCrawlablePlatforms } from "@/lib/domain/platforms";
+import { getCrawlablePlatforms, getPlatform } from "@/lib/domain/platforms";
 import { jsonNoStore } from "@/lib/http/no-store";
+import { notifyPulse } from "@/lib/poke/client";
+import { isPokeConfigured } from "@/lib/poke/config";
 import { readCatalog } from "@/lib/store/persistence";
 
 export const runtime = "nodejs";
@@ -61,7 +63,15 @@ export async function POST(request: Request) {
 
   try {
     const result = await crawlPlatform({ platformId });
-    return jsonNoStore(result);
+    const poke = result.attempt.ok
+      ? await notifyPulse({
+          platformName: getPlatform(result.attempt.platformId)?.name ?? result.attempt.platformId,
+          stats: result.attempt.stats,
+          budget: result.budget,
+          listings: result.listings,
+        })
+      : { configured: isPokeConfigured(), sent: false };
+    return jsonNoStore({ ...result, poke });
   } catch (error) {
     if (error instanceof CrawlBudgetError) {
       return jsonNoStore(

@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { IconArrowLeft, IconBookmark } from "@/components/icons";
 import { formatRelative, polishExcerpt, workModeLabel } from "@/lib/domain/text";
-import { readSavedIds, toggleSaved } from "@/lib/client/saved";
+import { fetchPokeStatus, sendPokeIntent } from "@/lib/client/api";
+import { toggleSaved, useIsSaved } from "@/lib/client/saved";
 import type { JobListing } from "@/lib/domain/types";
 
 function Fact({ label, value }: { label: string; value: string | null | undefined }) {
@@ -20,11 +21,31 @@ function Fact({ label, value }: { label: string; value: string | null | undefine
 }
 
 export function JobDetail({ listing }: { listing: JobListing }) {
-  const [saved, setSaved] = useState(false);
+  const saved = useIsSaved(listing.id);
+  const [pokeBusy, setPokeBusy] = useState(false);
+  const [pokeNote, setPokeNote] = useState<string | null>(null);
 
-  useEffect(() => {
-    setSaved(readSavedIds().includes(listing.id));
-  }, [listing.id]);
+  async function askPoke() {
+    setPokeBusy(true);
+    setPokeNote(null);
+    try {
+      const status = await fetchPokeStatus();
+      if (!status.configured) {
+        setPokeNote("Set POKE_API_KEY, then retry from Pulse.");
+        return;
+      }
+      const result = await sendPokeIntent("role", listing.id);
+      if (result.sent) {
+        setPokeNote("Poke has this role.");
+      } else {
+        setPokeNote(result.error ?? "Poke did not accept that brief.");
+      }
+    } catch (err: unknown) {
+      setPokeNote(err instanceof Error ? err.message : "Poke could not be reached.");
+    } finally {
+      setPokeBusy(false);
+    }
+  }
 
   return (
     <div>
@@ -35,7 +56,7 @@ export function JobDetail({ listing }: { listing: JobListing }) {
         </Link>
         <button
           type="button"
-          onClick={() => setSaved(toggleSaved(listing.id).includes(listing.id))}
+          onClick={() => toggleSaved(listing.id)}
           aria-pressed={saved}
           aria-label={saved ? "Remove saved role" : "Save role"}
           className="pressable text-[14px] text-ivory"
@@ -74,6 +95,18 @@ export function JobDetail({ listing }: { listing: JobListing }) {
         Open on {listing.platformName}
       </a>
       <p className="mt-3 text-[12px] leading-5 text-ash">Opens the original listing.</p>
+
+      <button
+        type="button"
+        onClick={() => void askPoke()}
+        disabled={pokeBusy}
+        className="pressable mt-8 text-[14px] text-ivory disabled:text-ash"
+      >
+        {pokeBusy ? "Sending…" : pokeNote === "Poke has this role." ? "Sent to Poke" : "Ask Poke"}
+      </button>
+      <p className="mt-2 text-[12px] leading-5 text-ash">
+        {pokeNote ?? "Briefs poke.com so it can research and remind you."}
+      </p>
     </div>
   );
 }

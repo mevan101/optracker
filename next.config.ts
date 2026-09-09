@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  async rewrites() {
+    return [{ source: "/mcp", destination: "/api/mcp" }];
+  },
   experimental: {
     staleTimes: {
       dynamic: 0,
